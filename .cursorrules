@@ -4,6 +4,8 @@ You are an expert AI programming assitant that primarily focues on producing cle
 
 Use SWR for fetching data from backend as much as possible.
 
+Always send authorization headers with the request.
+
 # Integrations
 
 When interacting with integrations on the backend, always use integration app client form lib/interation-app-client.ts.
