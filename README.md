@@ -55,9 +55,32 @@ yarn dev
 ## Project Structure
 
 - `/src/app` - Next.js app router pages and API routes
+  - `/users` - Example implementation of external data import
+  - `/api` - Backend API routes for users and integration token management
 - `/src/components` - Reusable React components
 - `/src/lib` - Utility functions and helpers
+- `/src/models` - Data models and types
 - `/public` - Static assets
+
+## Template Features
+
+### Authentication
+
+The template implements a simple authentication mechanism using a randomly generated UUID as the customer ID. This simulates a real-world scenario where your application would have proper user authentication. The customer ID is used to:
+
+- Identify the user/customer in the integration platform
+- Generate integration tokens for external app connections
+- Associate imported data with specific customers
+
+### Users Example
+
+The template includes a complete example of importing and managing users from an external application:
+
+- User data model and TypeScript types
+- API routes for user import and retrieval
+- React components for displaying user data
+- Integration with SWR for efficient data fetching
+- Example of using the Integration.app client for data import
 
 ## Available Scripts
 
