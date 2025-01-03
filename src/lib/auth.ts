@@ -1,48 +1,48 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const AUTH_ID_KEY = 'integration_user_id';
-const USER_NAME_KEY = 'integration_user_name';
+const AUTH_ID_KEY = 'integration_customer_id';
+const CUSTOMER_NAME_KEY = 'integration_customer_name';
 
-export type AuthUser = {
-  userId: string;
-  userName: string | null;
+export type AuthCustomer = {
+  customerId: string;
+  customerName: string | null;
 };
 
-export function getStoredAuth(): AuthUser | null {
+export function getStoredAuth(): AuthCustomer | null {
   if (typeof window === 'undefined') return null;
   
-  const userId = localStorage.getItem(AUTH_ID_KEY);
-  const userName = localStorage.getItem(USER_NAME_KEY);
+  const customerId = localStorage.getItem(AUTH_ID_KEY);
+  const customerName = localStorage.getItem(CUSTOMER_NAME_KEY);
   
-  if (!userId) return null;
+  if (!customerId) return null;
   
   return {
-    userId,
-    userName
+    customerId,
+    customerName
   };
 }
 
-export function storeAuth(auth: AuthUser): void {
+export function storeAuth(auth: AuthCustomer): void {
   if (typeof window === 'undefined') return;
   
-  localStorage.setItem(AUTH_ID_KEY, auth.userId);
-  if (auth.userName) {
-    localStorage.setItem(USER_NAME_KEY, auth.userName);
+  localStorage.setItem(AUTH_ID_KEY, auth.customerId);
+  if (auth.customerName) {
+    localStorage.setItem(CUSTOMER_NAME_KEY, auth.customerName);
   } else {
-    localStorage.removeItem(USER_NAME_KEY);
+    localStorage.removeItem(CUSTOMER_NAME_KEY);
   }
 }
 
-export function generateAndStoreAuth(): AuthUser {
+export function generateAndStoreAuth(): AuthCustomer {
   const auth = {
-    userId: uuidv4(),
-    userName: null
+    customerId: uuidv4(),
+    customerName: null
   };
   storeAuth(auth);
   return auth;
 }
 
-export function ensureAuth(): AuthUser {
+export function ensureAuth(): AuthCustomer {
   const existingAuth = getStoredAuth();
   if (existingAuth) return existingAuth;
   return generateAndStoreAuth();
@@ -51,5 +51,5 @@ export function ensureAuth(): AuthUser {
 export function clearAuth(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(AUTH_ID_KEY);
-  localStorage.removeItem(USER_NAME_KEY);
+  localStorage.removeItem(CUSTOMER_NAME_KEY);
 } 

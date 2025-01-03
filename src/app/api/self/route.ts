@@ -5,8 +5,8 @@ export async function GET(request: NextRequest) {
     try {
         const auth = getAuthFromRequest(request)
         return NextResponse.json({
-            userId: auth.userId,
-            userName: auth.userName
+            customerId: auth.customerId,
+            customerName: auth.customerName
         })
     } catch (error) {
         console.error('Error getting user info:', error)
@@ -15,4 +15,4 @@ export async function GET(request: NextRequest) {
             { status: 500 }
         )
     }
-} 
+}   

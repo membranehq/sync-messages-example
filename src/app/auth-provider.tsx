@@ -1,19 +1,19 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import type { AuthUser } from "@/lib/auth"
+import type { AuthCustomer } from "@/lib/auth"
 import { ensureAuth, storeAuth } from "@/lib/auth"
 
 interface AuthContextType {
-  userId: string | null
-  userName: string | null
-  setUserName: (name: string) => void
+  customerId: string | null
+  customerName: string | null
+  setCustomerName: (name: string) => void
 }
 
 const AuthContext = createContext<AuthContextType>({
-  userId: null,
-  userName: null,
-  setUserName: () => {},
+  customerId: null,
+  customerName: null,
+  setCustomerName: () => {},
 })
 
 export function useAuth() {
@@ -21,7 +21,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [auth, setAuth] = useState<AuthUser | null>(null)
+  const [auth, setAuth] = useState<AuthCustomer | null>(null)
 
   useEffect(() => {
     // Ensure we have auth on mount
@@ -29,9 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuth(currentAuth)
   }, [])
 
-  const setUserName = (name: string) => {
+  const setCustomerName = (name: string) => {
     if (!auth) return
-    const newAuth = { ...auth, userName: name }
+    const newAuth = { ...auth, customerName: name }
     storeAuth(newAuth)
     setAuth(newAuth)
   }
@@ -39,9 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        userId: auth?.userId ?? null,
-        userName: auth?.userName ?? null,
-        setUserName,
+        customerId: auth?.customerId ?? null,
+        customerName: auth?.customerName ?? null,
+        setCustomerName,
       }}
     >
       {children}
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function getAuthHeaders(): HeadersInit {
   const auth = ensureAuth()
   return {
-    "x-auth-id": auth.userId,
-    "x-user-name": auth.userName || "",
+    "x-auth-id": auth.customerId,
+    "x-customer-name": auth.customerName || "",
   }
 }

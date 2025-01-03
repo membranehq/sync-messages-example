@@ -1,28 +1,21 @@
-import Link from "next/link"
 import { AuthTest } from "@/components/auth-test"
+import { Metadata } from "next"
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Overview",
+}
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col gap-8">
-      <div className="px-4 py-6 sm:px-0">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Integration Use Case Template
-        </h1>
-        <p className="mt-2 text-lg text-gray-600 dark:text-gray-300">
-          This mini-app demonstrates a minimal version of your integration use
-          case end to end.
-        </p>
-        <div className="mt-2 text-lg text-gray-600 dark:text-gray-300">
-          <ul>
-            <li>
-              Go to <Link href="/integrations">Integrations</Link> to manage
-              integrations.
-            </li>
-            <li>
-              Go to <Link href="/use-case">Use Case</Link> to try out the
-              integration logic.
-            </li>
-          </ul>
+    <div className="container mx-auto py-10">
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+            <p className="text-muted-foreground">
+              Welcome to Use Case Template
+            </p>
+          </div>
         </div>
       </div>
       <AuthTest />

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import type { AuthUser } from './auth'
+import type { AuthCustomer } from './auth'
 
-export function getAuthFromRequest(request: NextRequest): AuthUser {
+export function getAuthFromRequest(request: NextRequest): AuthCustomer {
     return {
-        userId: request.headers.get('x-auth-id') ?? '',
-        userName: request.headers.get('x-user-name') ?? null
+        customerId: request.headers.get('x-auth-id') ?? '',
+        customerName: request.headers.get('x-customer-name') ?? null
     }
 } 
