@@ -1,22 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { getStoredAuth, storeAuth } from "@/lib/auth"
+import { useAuth } from "@/app/auth-provider"
 
 export function AuthTest() {
-  const [auth, setAuth] = useState(() => getStoredAuth())
-
-  const handleUpdateName = (name: string) => {
-    if (name.trim() && auth) {
-      const newAuth = {
-        ...auth,
-        customerName: name.trim(),
-      }
-      storeAuth(newAuth)
-      setAuth(newAuth)
-    }
-  }
-
+  const { customerId, customerName, setCustomerName } = useAuth()
   const [nameInput, setNameInput] = useState("")
 
   return (
@@ -28,9 +16,9 @@ export function AuthTest() {
           run integrations.
         </p>
         <p className="font-mono text-sm">
-          Customer ID: {auth?.customerId || "Loading..."}
+          Customer ID: {customerId || "Loading..."}
         </p>
-        <p>Name: {auth?.customerName || "Not set"}</p>
+        <p>Name: {customerName || "Not set"}</p>
       </div>
 
       <div className="flex gap-2">
@@ -43,8 +31,10 @@ export function AuthTest() {
         />
         <button
           onClick={() => {
-            handleUpdateName(nameInput)
-            setNameInput("")
+            if (nameInput.trim()) {
+              setCustomerName(nameInput.trim())
+              setNameInput("")
+            }
           }}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
