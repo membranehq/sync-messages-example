@@ -36,6 +36,7 @@ cp .env-sample .env
 ```env
 INTEGRATION_APP_WORKSPACE_KEY=your_workspace_key_here
 INTEGRATION_APP_WORKSPACE_SECRET=your_workspace_secret_here
+MONGODB_URI=your_mongodb_connection_string
 ```
 
 You can find these credentials in your Integration.app workspace settings.
