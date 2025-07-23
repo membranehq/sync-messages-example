@@ -1,95 +1,158 @@
-# Integration Use Case Template
+# Sync Messages Example
 
-This is a template for an application showcasing integration capabilities using [Integration.app](https://integration.app). The app is built with Next.js and demonstrates how to implement user authentication and integration token generation.
+This is a Next.js application that demonstrates how to integrate with various messaging platforms using Integration.app. The app allows you to view messages and chats from multiple connected integrations in a unified chat interface.
 
-## Prerequisites
+## Features
 
-- Node.js 18+ installed
-- Integration.app workspace credentials (Workspace Key and Secret)
+- **Multi-Platform Message Sync**: Connect to multiple messaging platforms and view all messages in one place
+- **Real-time Chat Interface**: Modern chat UI with message bubbles, timestamps, and sender information
+- **Chat Management**: Browse and select different chats from connected platforms
+- **Integration Dashboard**: Overview of connected platforms and message statistics
+- **Dark Mode Support**: Full dark/light theme support
+- **Responsive Design**: Works on desktop and mobile devices
+- **MongoDB Integration**: Efficient data storage and caching for better performance
+- **Robust Timestamp Handling**: Proper conversion of Slack and other platform timestamps
 
-## Setup
+## Pages
 
-1. Clone the repository:
+### Overview (`/`)
 
-```bash
-git clone <repository-url>
-cd <repository-name>
-```
+- Dashboard showing integration status and quick stats
+- Overview of connected platforms and recent activity
 
-2. Install dependencies:
+### Integrations (`/integrations`)
 
-```bash
-npm install
-# or
-yarn install
-```
+- Connect to messaging platforms via Integration.app
+- Manage your connected integrations
+- View integration status and configuration
 
-3. Set up environment variables:
+### Messages (`/messages`)
 
-```bash
-# Copy the sample environment file
-cp .env-sample .env
-```
+- **Main feature**: Unified chat interface for all connected messaging platforms
+- View messages from all integrations in a chat format
+- Browse and select different chats
+- Real-time message updates (refreshes every 30 seconds)
+- Message statistics and platform information
+- Sync functionality to fetch fresh data from integrations
+- Platform badges showing source of each message/chat
 
-4. Edit `.env` and add your Integration.app credentials:
+## API Endpoints
 
-```env
-INTEGRATION_APP_WORKSPACE_KEY=your_workspace_key_here
-INTEGRATION_APP_WORKSPACE_SECRET=your_workspace_secret_here
-MONGODB_URI=your_mongodb_connection_string
-```
+### `/api/messages`
 
-You can find these credentials in your Integration.app workspace settings.
+- `GET`: Fetch messages from MongoDB (fast, cached data)
+- Returns messages with sender, content, timestamp, and platform source
 
-## Running the Application
+### `/api/chats`
 
-1. Start the development server:
+- `GET`: Fetch chats from MongoDB (fast, cached data)
+- Returns chat information including participants and last message
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+### `/api/messages/sync`
 
-2. Open [http://localhost:3000](http://localhost:3000) in your browser.
+- `POST`: Sync messages and chats from all connected integrations to MongoDB
+- Fetches fresh data from Integration.app and stores it locally
 
-## Project Structure
+### `/api/integration-token`
 
-- `/src/app` - Next.js app router pages and API routes
-  - `/users` - Example implementation of external data import
-  - `/api` - Backend API routes for users and integration token management
-- `/src/components` - Reusable React components
-- `/src/lib` - Utility functions and helpers
-- `/src/models` - Data models and types
-- `/public` - Static assets
+- `POST`: Generate integration tokens for platform connections
 
-## Template Features
+### `/api/self`
 
-### Authentication
+- `GET`: Get current user information
 
-The template implements a simple authentication mechanism using a randomly generated UUID as the customer ID. This simulates a real-world scenario where your application would have proper user authentication. The customer ID is used to:
+## Integration.app Actions
 
-- Identify the user/customer in the integration platform
-- Generate integration tokens for external app connections
-- Associate imported data with specific customers
+The app uses the following Integration.app actions to fetch data:
 
-### Users Example
+- `get-messages`: Retrieves messages from connected platforms with parameters:
+  - `cursor`: Pagination cursor (empty string for first page)
+  - `channelId`: Channel/chat ID to fetch messages from
+- `get-chats`: Retrieves chat/conversation lists from connected platforms
 
-The template includes a complete example of importing and managing users from an external application:
+### Data Structure Handling
 
-- User data model and TypeScript types
-- API routes for user import and retrieval
-- React components for displaying user data
-- Integration with SWR for efficient data fetching
-- Example of using the Integration.app client for data import
+The application properly handles various platform data structures:
 
-## Available Scripts
+- **Slack timestamps**: Converts Unix timestamps (e.g., `"1753303953.454369"`) to ISO format
+- **Message content**: Extracts from `fields.text`, `rawFields.text`, or other platform-specific fields
+- **Sender information**: Extracts from `fields.ownerId`, `rawFields.user`, or other sender fields
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build the application for production
-- `npm run start` - Start the production server
-- `npm run lint` - Run ESLint to check code quality
+## Technologies Used
+
+- **Next.js 15**: React framework with App Router
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **SWR**: Data fetching and caching
+- **Integration.app SDK**: Platform integration
+- **MongoDB**: Data storage (via Mongoose)
+- **date-fns**: Date formatting utilities
+- **Lucide React**: Icon library
+- **@chatscope/chat-ui-kit-react**: Chat UI components and interface
+
+## Getting Started
+
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Set up your environment variables:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+3. Configure your Integration.app credentials in `.env.local`
+
+4. Run the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal) in your browser
+
+## Usage
+
+1. **Connect Integrations**: Go to the Integrations page and connect your messaging platforms
+2. **Sync Messages**: Click "Sync Messages" to fetch fresh data from all connected platforms
+3. **View Messages**: Navigate to the Messages page to see all your messages
+4. **Browse Chats**: Select different chats from the sidebar to view conversations
+5. **Refresh Data**: Use the refresh button to update the display from cached data
+6. **Platform Information**: See which platform each message/chat comes from via badges
+
+## Architecture
+
+The application follows a clean architecture pattern:
+
+- **API Routes**: Handle server-side logic and Integration.app communication
+- **Database Models**: MongoDB schemas for messages and chats with proper indexing
+- **Hooks**: Custom React hooks for data fetching (SWR-based)
+- **Components**: Reusable UI components for chat interface
+- **Types**: TypeScript interfaces for type safety
+- **Utils**: Helper functions and utilities including timestamp conversion
+
+## Customization
+
+You can customize the chat interface by:
+
+- Modifying the `ChatMessage` component for different message styles
+- Updating the `ChatList` component for different chat list layouts
+- Adding new Integration.app actions for additional functionality
+- Extending the message and chat types for platform-specific data
+- Customizing timestamp handling in `src/lib/utils.ts`
+- Adding new platform integrations by extending the sync logic
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
