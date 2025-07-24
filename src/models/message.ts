@@ -9,6 +9,7 @@ export interface IMessage extends Document {
 	integrationId: string;
 	platformName?: string;
 	customerId: string;
+	messageType: "user" | "third-party";
 	status: "pending" | "sent" | "failed";
 	flowRunId?: string;
 	externalMessageId?: string;
@@ -27,6 +28,12 @@ const MessageSchema = new Schema<IMessage>(
 		integrationId: { type: String, required: true },
 		platformName: { type: String },
 		customerId: { type: String, required: true },
+		messageType: {
+			type: String,
+			required: true,
+			enum: ["user", "third-party"],
+			default: "user",
+		},
 		status: {
 			type: String,
 			required: true,

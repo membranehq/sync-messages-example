@@ -6,6 +6,7 @@ export interface Message {
 	chatId?: string;
 	integrationId: string;
 	platformName?: string;
+	messageType?: "user" | "third-party";
 	status?: "pending" | "sent" | "failed";
 }
 

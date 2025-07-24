@@ -1,0 +1,6 @@
+id: 6881440ff2eacefeb83c3ae1
+key: microsoft-teams
+name: Microsoft Teams
+connectorId: 6466784e60f981f3ce696907
+baseUri: s3://integration-app-connectors/public/d2f487ff-7381-409e-9098-2f4d4f51ca51
+connectorVersion: 2.3.1

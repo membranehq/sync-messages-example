@@ -8,15 +8,17 @@ import {
 	ConversationHeader,
 	Avatar,
 } from "@chatscope/chat-ui-kit-react";
+import { RefreshCw } from "lucide-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { useEffect, useRef } from "react";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 interface ChatscopeChatProps {
 	messages: Message[];
 	selectedChatId?: string;
 	isLoading?: boolean;
 	onSendMessage?: (message: string) => void;
+	onRetryMessage?: (messageId: string) => void;
 	selectedChatName?: string;
 }
 
@@ -25,6 +27,7 @@ export function ChatscopeChat({
 	selectedChatId,
 	isLoading,
 	onSendMessage,
+	onRetryMessage,
 	selectedChatName,
 }: ChatscopeChatProps) {
 	const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,10 +35,6 @@ export function ChatscopeChat({
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
-
-	useEffect(() => {
-		scrollToBottom();
-	}, [messages]);
 
 	if (isLoading) {
 		return (
@@ -90,12 +89,24 @@ export function ChatscopeChat({
 		message: msg.content,
 		sentTime: new Date(msg.timestamp).toLocaleTimeString(),
 		sender: msg.sender,
-		direction: (msg.sender === "You" ? "outgoing" : "incoming") as
+		direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
 			| "outgoing"
 			| "incoming",
 		position: "single" as const,
 		status: msg.status, // Add status to the message
 	}));
+
+	// Scroll to bottom when messages change
+	useEffect(() => {
+		scrollToBottom();
+	}, [messages]);
+
+	// Auto-scroll to bottom on initial load
+	useEffect(() => {
+		if (chatscopeMessages.length > 0) {
+			scrollToBottom();
+		}
+	}, []);
 
 	const handleSendMessage = (message: string) => {
 		if (onSendMessage) {
@@ -116,32 +127,50 @@ export function ChatscopeChat({
 							</div>
 						</ConversationHeader.Content>
 					</ConversationHeader>
-					<MessageList>
-						{chatscopeMessages.map((msg, index) => (
-							<div key={index} className="relative">
-								<ChatscopeMessage model={msg} />
-								{/* Status indicator for outgoing messages */}
-								{msg.direction === "outgoing" && msg.status && (
-									<div className="absolute -bottom-6 right-0">
-										<span
-											className={`text-xs px-1.5 py-0.5 rounded-full text-xs ${
-												msg.status === "pending"
-													? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+					<MessageList
+						style={{ maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
+					>
+						{chatscopeMessages.map((msg, index) => {
+							// Find the original message to get the ID for retry
+							const originalMessage = chatMessages[index];
+
+							return (
+								<div key={index} className="relative">
+									<ChatscopeMessage model={msg} />
+									{/* Status indicator and retry button for outgoing messages */}
+									{msg.direction === "outgoing" && msg.status && (
+										<div className="absolute -bottom-6 right-0 flex items-center space-x-2">
+											<span
+												className={`text-xs px-1.5 py-0.5 rounded-full text-xs ${
+													msg.status === "pending"
+														? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+														: msg.status === "sent"
+														? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+														: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+												}`}
+											>
+												{msg.status === "pending"
+													? "Pending"
 													: msg.status === "sent"
-													? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-													: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-											}`}
-										>
-											{msg.status === "pending"
-												? "Pending"
-												: msg.status === "sent"
-												? "Sent"
-												: "Failed"}
-										</span>
-									</div>
-								)}
-							</div>
-						))}
+													? "Sent"
+													: "Failed"}
+											</span>
+
+											{/* Retry icon for failed messages */}
+											{msg.status === "failed" && onRetryMessage && (
+												<button
+													onClick={() => onRetryMessage(originalMessage.id)}
+													className="text-xs p-1 text-red-500 hover:text-red-700 transition-colors"
+													title="Retry sending message"
+												>
+													<RefreshCw className="h-3 w-3" />
+												</button>
+											)}
+										</div>
+									)}
+								</div>
+							);
+						})}
 						<div ref={messagesEndRef} />
 					</MessageList>
 					{onSendMessage && (

@@ -1,0 +1,6 @@
+id: 6881441c8bc4980214fdb45b
+key: whatsapp
+name: Whatsapp
+connectorId: 6466785c60f981f3ce69691e
+baseUri: s3://integration-app-connectors/public/4c7f0f9d-be53-4870-9b0f-718c919d79cf
+connectorVersion: 1.0.3

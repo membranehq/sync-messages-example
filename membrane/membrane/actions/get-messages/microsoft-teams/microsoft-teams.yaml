@@ -1,0 +1,42 @@
+isCustomized: true
+parentId: 68814411f2eacefeb83c3b64
+integrationId: 6881440ff2eacefeb83c3ae1
+key: get-messages
+state: CONFIGURATION_ERROR
+errors:
+  - message: Integration Dependency has error(s)
+    type: dependency_error
+    data:
+      workspaceElementReference:
+        type: integration
+        id: 6881440ff2eacefeb83c3ae1
+  - message: Field Mapping Dependency has error(s)
+    type: dependency_error
+    data:
+      workspaceElementReference:
+        type: field-mapping
+        id: 68814411f2eacefeb83c3b4e
+isDeactivated: false
+id: 68814411f2eacefeb83c3b76
+name: Get Messages
+type: list-data-records
+inputSchema:
+  type: object
+  properties:
+    cursor:
+      type: string
+    channelId:
+      type: string
+config:
+  dataSource:
+    collectionKey: channel-messages
+    collectionParameters:
+      channel_id:
+        $var: $.input.channelId
+  cursor:
+    $var: $.input.cursor
+  fieldMapping:
+    key: messages
+    includeRawFields: true
+isDeployed: false
+integrationKey: microsoft-teams

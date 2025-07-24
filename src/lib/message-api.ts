@@ -14,6 +14,7 @@ export interface SendMessageRequest {
 	chatType?: "direct" | "group" | "channel";
 	platformName?: string;
 	messageType?: "text" | "image" | "file" | "reaction" | "system";
+	messageId?: string; // Optional: for retrying existing messages
 }
 
 export interface SendMessageResponse {
@@ -45,6 +46,7 @@ export async function sendMessageToThirdParty(
 				chatType: request.chatType,
 				platformName: request.platformName,
 				messageType: request.messageType,
+				messageId: request.messageId, // Add messageId for retries
 			}),
 		});
 

@@ -1,0 +1,24 @@
+isCustomized: true
+key: get-messages
+state: READY
+errors: []
+isDeactivated: false
+id: 68814411f2eacefeb83c3b64
+name: Get Messages
+type: list-data-records
+inputSchema:
+  type: object
+  properties:
+    cursor:
+      type: string
+    channelId:
+      type: string
+config:
+  dataSource:
+    udm: messages
+  cursor:
+    $var: $.input.cursor
+  fieldMapping:
+    key: messages
+    includeRawFields: true
+isDeployed: true

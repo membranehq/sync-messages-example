@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
 		// 3. Process each connection
 		for (const connection of connections) {
 			try {
+				console.log(
+					`Processing connection: ${connection.id} (${
+						connection.name || "Unknown"
+					})`
+				);
+
 				// Get chats first
 				const chatsResult = await client
 					.connection(connection.id)
@@ -184,6 +190,20 @@ export async function POST(request: NextRequest) {
 											`Message timestamp: raw="${rawTimestamp}", formatted="${timestamp}"`
 										);
 
+										// Check if we already have this message by externalMessageId
+										const existingMessage = await Message.findOne({
+											customerId: auth.customerId,
+											externalMessageId: messageId,
+											integrationId: connection.id,
+										});
+
+										if (existingMessage) {
+											console.log(
+												`Message with externalMessageId ${messageId} already exists, skipping import`
+											);
+											continue;
+										}
+
 										// Upsert message
 										await Message.findOneAndUpdate(
 											{
@@ -199,6 +219,8 @@ export async function POST(request: NextRequest) {
 												chatId: chatId,
 												integrationId: connection.id,
 												platformName: connection.name || connection.id,
+												messageType: "third-party", // Mark as third-party message
+												externalMessageId: messageId, // Set the external message ID
 												customerId: auth.customerId,
 											},
 											{ upsert: true, new: true }

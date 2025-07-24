@@ -1,0 +1,24 @@
+isCustomized: false
+parentId: 688144b55c999fea55f50f91
+integrationId: 6881441c8bc4980214fdb45b
+key: get-chats
+state: READY
+errors: []
+isDeactivated: false
+id: 688144d99a588ae920681494
+name: Get Chats
+type: list-data-records
+inputSchema:
+  type: object
+  properties:
+    cursor:
+      type: string
+config:
+  dataSource:
+    key: chats
+  cursor:
+    $var: $.input.cursor
+  fieldMapping:
+    key: chats
+isDeployed: false
+integrationKey: whatsapp

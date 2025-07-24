@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
 			chatId: msg.chatId,
 			integrationId: msg.integrationId,
 			platformName: msg.platformName,
+			messageType: msg.messageType,
+			status: msg.status,
 		}));
 
 		return NextResponse.json({ messages: messagesData }, { status: 200 });

@@ -6,10 +6,11 @@ import { useChats } from "@/hooks/use-chats";
 import { useSyncMessages } from "@/hooks/use-sync-messages";
 import { Message } from "@/types/message";
 import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
+import { ensureAuth } from "@/lib/auth";
 import { ChatList } from "@/components/chat-list";
 import { ChatscopeChat } from "@/components/chatscope-chat";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, MessageCircle, Download } from "lucide-react";
+import { RefreshCw, MessageCircle, Download, Loader2 } from "lucide-react";
 
 export default function MessagesPage() {
 	// Hooks
@@ -27,21 +28,25 @@ export default function MessagesPage() {
 	const [isSyncing, setIsSyncing] = useState(false);
 
 	// Helper functions
-	const createNewMessage = (content: string): Message => ({
-		id: `local-${Date.now()}-${Math.random()}`,
-		content,
-		sender: "You",
-		timestamp: new Date().toISOString(),
-		chatId: selectedChatId!,
-		integrationId: selectedChatIntegrationId || "local",
-		platformName: selectedChatPlatformName || "Local",
-		status: "pending",
-	});
+	const createNewMessage = (content: string): Message => {
+		const currentUser = ensureAuth();
+		return {
+			id: `local-${Date.now()}-${Math.random()}`,
+			content,
+			sender: currentUser.customerId,
+			timestamp: new Date().toISOString(),
+			chatId: selectedChatId!,
+			integrationId: selectedChatIntegrationId || "local",
+			platformName: selectedChatPlatformName || "Local",
+			messageType: "user",
+			status: "pending",
+		};
+	};
 
 	const updateMessageStatus = (
 		messages: Message[],
 		messageId: string,
-		status: "sent" | "failed"
+		status: "pending" | "sent" | "failed"
 	) => {
 		return messages.map((msg) =>
 			msg.id === messageId ? { ...msg, status } : msg
@@ -57,7 +62,7 @@ export default function MessagesPage() {
 	const updateCacheWithStatus = (
 		messages: Message[],
 		messageId: string,
-		status: "sent" | "failed"
+		status: "pending" | "sent" | "failed"
 	) => {
 		const updatedMessages = updateMessageStatus(messages, messageId, status);
 		mutateMessages({ messages: updatedMessages }, false);
@@ -119,8 +124,10 @@ export default function MessagesPage() {
 				});
 
 				if (response.success) {
-					updateCacheWithStatus(updatedMessages, newMessage.id, "sent");
-					console.log("Message sent successfully to third-party system");
+					// Keep status as "pending" - webhook will update to "sent" or "failed"
+					console.log(
+						"Message flow started successfully, waiting for webhook confirmation"
+					);
 				} else {
 					updateCacheWithStatus(updatedMessages, newMessage.id, "failed");
 					console.error("Failed to send message:", response.error);
@@ -128,6 +135,58 @@ export default function MessagesPage() {
 			} catch (error) {
 				updateCacheWithStatus(updatedMessages, newMessage.id, "failed");
 				console.error("Failed to send message to third-party system:", error);
+			}
+		},
+		[selectedChatId, messages, mutateMessages]
+	);
+
+	const handleRetryMessage = useCallback(
+		async (messageId: string) => {
+			if (!selectedChatId) return;
+
+			// Find the message to retry
+			const messageToRetry = messages.find((msg) => msg.id === messageId);
+			if (!messageToRetry) {
+				console.error("Message not found for retry:", messageId);
+				return;
+			}
+
+			console.log(
+				"Retrying message:",
+				messageToRetry.content,
+				"to chat:",
+				selectedChatId
+			);
+
+			// Update message status to pending
+			updateCacheWithStatus(messages, messageId, "pending");
+
+			// Send to third-party system
+			try {
+				const response = await sendMessageToThirdParty({
+					message: messageToRetry.content,
+					chatId: selectedChatId,
+					integrationId: selectedChatIntegrationId || "local",
+					recipient: selectedChat?.participants?.[0] || selectedChatId,
+					chatName: selectedChatName,
+					chatType: "direct",
+					platformName: selectedChatPlatformName,
+					messageType: "text",
+					messageId: messageId, // Pass the existing message ID for retry
+				});
+
+				if (response.success) {
+					// Keep status as "pending" - webhook will update to "sent" or "failed"
+					console.log(
+						"Message retry flow started successfully, waiting for webhook confirmation"
+					);
+				} else {
+					updateCacheWithStatus(messages, messageId, "failed");
+					console.error("Failed to retry message:", response.error);
+				}
+			} catch (error) {
+				updateCacheWithStatus(messages, messageId, "failed");
+				console.error("Failed to retry message:", error);
 			}
 		},
 		[selectedChatId, messages, mutateMessages]
@@ -158,9 +217,11 @@ export default function MessagesPage() {
 					variant="outline"
 					className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
 				>
-					<Download
-						className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
-					/>
+					{isSyncing ? (
+						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+					) : (
+						<Download className="mr-2 h-4 w-4" />
+					)}
 					{isSyncing ? "Syncing..." : "Sync Messages"}
 				</Button>
 				<Button
@@ -179,14 +240,14 @@ export default function MessagesPage() {
 	);
 
 	const ChatListSection = () => (
-		<div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-			<div className="flex items-center space-x-2 mb-4">
+		<div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+			<div className="flex items-center space-x-2 p-4 border-b border-gray-200 dark:border-gray-700">
 				<MessageCircle className="h-5 w-5 text-gray-500" />
 				<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
 					Chats
 				</h2>
 			</div>
-			<div className="h-full overflow-y-auto">
+			<div className="flex-1 overflow-y-auto p-4">
 				<ChatList
 					chats={chats}
 					selectedChatId={selectedChatId}
@@ -204,6 +265,7 @@ export default function MessagesPage() {
 				selectedChatId={selectedChatId}
 				isLoading={messagesLoading}
 				onSendMessage={handleSendMessage}
+				onRetryMessage={handleRetryMessage}
 				selectedChatName={selectedChatName}
 			/>
 		</div>

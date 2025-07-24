@@ -1,0 +1,92 @@
+key: receive-message-events
+state: READY
+errors: []
+isDeactivated: false
+id: 68814411f2eacefeb83c3b92
+name: Receive Message Events
+nodes:
+  message-created-trigger:
+    type: data-record-created-trigger
+    name: Message Created Trigger
+    config:
+      dataSource:
+        key: messages
+    links:
+      - key: get-all-message-fields-by-id
+  message-updated-trigger:
+    type: data-record-updated-trigger
+    name: Message Updated Trigger
+    config:
+      dataSource:
+        key: messages
+    links:
+      - key: get-all-message-fields-by-id2
+  get-all-message-fields-by-id:
+    type: find-data-record-by-id
+    name: Get all Message fields by Id
+    config:
+      dataSource:
+        key: messages
+      fieldMapping:
+        key: messages
+        includeRawFields: true
+      id:
+        $var: $.input.message-created-trigger.record.id
+    links:
+      - key: create-message-in-my-app
+  get-all-message-fields-by-id2:
+    type: find-data-record-by-id
+    name: Get all Message fields by Id
+    config:
+      dataSource:
+        key: messages
+      id:
+        $var: $.input.message-updated-trigger.record.id
+      fieldMapping:
+        key: messages
+        includeRawFields: true
+    links:
+      - key: update-message-in-my-app
+  create-message-in-my-app:
+    type: api-request-to-your-app
+    name: Create Message in my App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.get-all-message-fields-by-id.id
+          data:
+            $var: $.input.get-all-message-fields-by-id
+    links: []
+  update-message-in-my-app:
+    type: api-request-to-your-app
+    name: Update Message in my App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.get-all-message-fields-by-id2.id
+          data:
+            $var: $.input.get-all-message-fields-by-id2
+    links: []
+  delete-message-in-my-app:
+    type: api-request-to-your-app
+    name: Delete Message from My App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.message-deleted-trigger.record.id
+        method: POST
+    links: []
+  message-deleted-trigger:
+    type: data-record-deleted-trigger
+    name: Message Deleted Trigger
+    config:
+      dataSource:
+        key: messages
+    links:
+      - key: delete-message-in-my-app
+autoCreateInstances: false
+customized: false
+isDeployed: false

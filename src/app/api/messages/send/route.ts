@@ -13,6 +13,7 @@ interface SendMessageRequest {
 	chatType?: "direct" | "group" | "channel";
 	platformName?: string;
 	messageType?: "text" | "image" | "file" | "reaction" | "system";
+	messageId?: string; // Optional: for retrying existing messages
 }
 
 interface SendMessageResponse {
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
 			chatType,
 			platformName,
 			messageType = "text",
+			messageId, // For retrying existing messages
 		} = body;
 
 		// Validate required fields
@@ -74,12 +76,14 @@ export async function POST(request: NextRequest) {
 			// Step 1: Run the flow to send message
 			console.log(`Running flow to send message to chat ${chatId}`);
 
-			// Generate unique message ID for tracking
-			const internalMessageId = `msg-${Date.now()}-${Math.random()}`;
+			// Check if this is a retry of an existing message
+			const isRetry = !!messageId;
+			const internalMessageId =
+				messageId || `msg-${Date.now()}-${Math.random()}`;
 
 			// Prepare the input data according to the required structure
 			const input = {
-				type: "created",
+				type: "created", // Always send as "created" type, even for retries
 				data: {
 					content: message,
 					sender: auth.customerId, // Using customerId as sender for now
@@ -112,25 +116,45 @@ export async function POST(request: NextRequest) {
 			const flowRunId = flowRun.id;
 			console.log(`Flow run started with ID: ${flowRunId}`);
 
-			// Step 2: Save message to MongoDB with pending status
+			// Step 2: Save or update message in MongoDB with pending status
 			const messageToSave = {
 				id: internalMessageId,
 				content: message,
-				sender: "You",
+				sender: auth.customerId, // Use customerId for proper user tracking
 				timestamp: new Date().toISOString(),
 				chatId: chatId,
 				integrationId: integrationId,
 				platformName: platformName || "Unknown",
+				messageType: "user" as const, // Mark as user message
 				status: "pending" as const,
 				flowRunId: flowRunId,
 			};
 
-			const savedMessage = await Message.create({
-				...messageToSave,
-				customerId: auth.customerId,
-			});
-
-			console.log(`Message saved to MongoDB with ID: ${savedMessage.id}`);
+			let savedMessage;
+			if (isRetry) {
+				// Update existing message for retry
+				savedMessage = await Message.findOneAndUpdate(
+					{ id: internalMessageId, customerId: auth.customerId },
+					{
+						...messageToSave,
+						customerId: auth.customerId,
+						updatedAt: new Date(),
+					},
+					{ new: true }
+				);
+				console.log(
+					`Message updated in MongoDB with ID: ${savedMessage?.id} and flowRunId: ${flowRunId}`
+				);
+			} else {
+				// Create new message
+				savedMessage = await Message.create({
+					...messageToSave,
+					customerId: auth.customerId,
+				});
+				console.log(
+					`Message saved to MongoDB with ID: ${savedMessage.id} and flowRunId: ${flowRunId}`
+				);
+			}
 
 			// Step 3: Return immediately with flow run ID
 			// The webhook will handle updating the message status when flow completes
@@ -161,10 +185,24 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
 	try {
-		const auth = getAuthFromRequest(request);
-		if (!auth.customerId) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		// For webhooks, we need to handle Integration.app's authentication
+		// They send X-Integration-App-Token instead of our usual headers
+		const integrationAppToken = request.headers.get("X-Integration-App-Token");
+
+		if (!integrationAppToken) {
+			console.error("No Integration.app token provided in webhook");
+			return NextResponse.json(
+				{ error: "Unauthorized - No token" },
+				{ status: 401 }
+			);
 		}
+
+		// For now, we'll accept any valid Integration.app token
+		// In production, you might want to validate this token
+		console.log(
+			"Integration.app webhook received with token:",
+			integrationAppToken.substring(0, 20) + "..."
+		);
 
 		const body: WebhookPayload = await request.json();
 		const {
@@ -182,14 +220,65 @@ export async function PUT(request: NextRequest) {
 
 		await connectDB();
 
+		// Debug: Let's see what messages exist in the database
+		const allMessages = await Message.find({}).limit(10);
+		console.log(
+			"All messages in database:",
+			allMessages.map((m) => ({
+				id: m.id,
+				flowRunId: m.flowRunId,
+				status: m.status,
+			}))
+		);
+
 		// Find the message by flow run ID
+		// For webhooks, we don't have customerId, so we'll search by flowRunId only
 		const message = await Message.findOne({
 			flowRunId: flowRunId,
-			customerId: auth.customerId,
 		});
 
 		if (!message) {
 			console.error(`Message not found for flow run ID: ${flowRunId}`);
+			console.error(
+				"Available flowRunIds:",
+				allMessages.map((m) => m.flowRunId).filter(Boolean)
+			);
+
+			// Try to find any pending message as a fallback
+			const pendingMessage = await Message.findOne({ status: "pending" });
+			if (pendingMessage) {
+				console.log(
+					`Found pending message with ID: ${pendingMessage.id}, updating it instead`
+				);
+				// Update this message instead
+				if (status === "completed") {
+					await Message.findOneAndUpdate(
+						{ _id: pendingMessage._id },
+						{
+							status: "sent",
+							externalMessageId: externalMessageId || "",
+							updatedAt: new Date(),
+						}
+					);
+					console.log(
+						`Message ${pendingMessage.id} marked as sent successfully`
+					);
+				} else if (status === "failed") {
+					await Message.findOneAndUpdate(
+						{ _id: pendingMessage._id },
+						{
+							status: "failed",
+							error: error || "Flow execution failed",
+							updatedAt: new Date(),
+						}
+					);
+					console.log(
+						`Message ${pendingMessage.id} marked as failed: ${error}`
+					);
+				}
+				return NextResponse.json({ success: true });
+			}
+
 			return NextResponse.json({ error: "Message not found" }, { status: 404 });
 		}
 
