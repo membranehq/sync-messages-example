@@ -255,13 +255,14 @@ export async function PUT(request: NextRequest) {
 					await Message.findOneAndUpdate(
 						{ _id: pendingMessage._id },
 						{
+							id: externalMessageId || pendingMessage.id, // Update the ID to match external platform
 							status: "sent",
 							externalMessageId: externalMessageId || "",
 							updatedAt: new Date(),
 						}
 					);
 					console.log(
-						`Message ${pendingMessage.id} marked as sent successfully`
+						`Message ${pendingMessage.id} marked as sent successfully with external ID: ${externalMessageId}`
 					);
 				} else if (status === "failed") {
 					await Message.findOneAndUpdate(
@@ -287,13 +288,16 @@ export async function PUT(request: NextRequest) {
 			await Message.findOneAndUpdate(
 				{ _id: message._id },
 				{
+					id: externalMessageId || message.id, // Update the ID to match external platform
 					status: "sent",
 					externalMessageId: externalMessageId || "",
 					updatedAt: new Date(),
 				}
 			);
 
-			console.log(`Message ${message.id} marked as sent successfully`);
+			console.log(
+				`Message ${message.id} marked as sent successfully with external ID: ${externalMessageId}`
+			);
 		} else if (status === "failed") {
 			await Message.findOneAndUpdate(
 				{ _id: message._id },
