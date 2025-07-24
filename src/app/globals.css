@@ -3,43 +3,214 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-  }
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 222.2 84% 4.9%;
+		--card: 0 0% 100%;
+		--card-foreground: 222.2 84% 4.9%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 222.2 84% 4.9%;
+		--primary: 222.2 47.4% 11.2%;
+		--primary-foreground: 210 40% 98%;
+		--secondary: 210 40% 96%;
+		--secondary-foreground: 222.2 84% 4.9%;
+		--muted: 210 40% 96%;
+		--muted-foreground: 215.4 16.3% 46.9%;
+		--accent: 210 40% 96%;
+		--accent-foreground: 222.2 84% 4.9%;
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 210 40% 98%;
+		--border: 214.3 31.8% 91.4%;
+		--input: 214.3 31.8% 91.4%;
+		--ring: 222.2 84% 4.9%;
+		--radius: 0.5rem;
+	}
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: 222.2 84% 4.9%;
-      --foreground: 210 40% 98%;
-      --card: 222.2 84% 4.9%;
-      --card-foreground: 210 40% 98%;
-      --popover: 222.2 84% 4.9%;
-      --popover-foreground: 210 40% 98%;
-      --primary: 210 40% 98%;
-      --primary-foreground: 222.2 47.4% 11.2%;
-      --secondary: 217.2 32.6% 17.5%;
-      --secondary-foreground: 210 40% 98%;
-    }
-  }
+	.dark {
+		--background: 222.2 84% 4.9%;
+		--foreground: 210 40% 98%;
+		--card: 222.2 84% 4.9%;
+		--card-foreground: 210 40% 98%;
+		--popover: 222.2 84% 4.9%;
+		--popover-foreground: 210 40% 98%;
+		--primary: 210 40% 98%;
+		--primary-foreground: 222.2 47.4% 11.2%;
+		--secondary: 217.2 32.6% 17.5%;
+		--secondary-foreground: 210 40% 98%;
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+		--accent: 217.2 32.6% 17.5%;
+		--accent-foreground: 210 40% 98%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 210 40% 98%;
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+		--ring: 212.7 26.8% 83.9%;
+	}
 }
 
-@layer components {
-  a[href]:not([class]),
-  a[href^="/"]:not([class]) {
-    @apply underline hover:no-underline text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white;
-  }
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  @apply bg-background text-foreground;
+/* Chatscope customizations */
+.cs-message__content {
+	background-color: transparent !important;
+}
+
+/* Message input styling - round edge light blue box */
+.cs-message-input__content-editor-wrapper {
+	background-color: #e3f2fd !important;
+	border-radius: 20px !important;
+	border: 1px solid #bbdefb !important;
+	padding: 8px 16px !important;
+}
+
+.cs-message-input__content-editor {
+	background-color: transparent !important;
+	border: none !important;
+	outline: none !important;
+	font-size: 14px !important;
+}
+
+.cs-message-input__content-editor:focus {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+/* Remove background from placeholder text */
+.cs-message-input__content-editor::placeholder {
+	background-color: transparent !important;
+}
+
+/* Remove any background from the text area itself */
+.cs-message-input__content-editor-wrapper .cs-message-input__content-editor {
+	background-color: transparent !important;
+}
+
+/* Additional targeting for placeholder background */
+.cs-message-input__content-editor::-webkit-input-placeholder {
+	background-color: transparent !important;
+}
+
+.cs-message-input__content-editor::-moz-placeholder {
+	background-color: transparent !important;
+}
+
+.cs-message-input__content-editor:-ms-input-placeholder {
+	background-color: transparent !important;
+}
+
+.cs-message-input__content-editor:-moz-placeholder {
+	background-color: transparent !important;
+}
+
+/* Remove background from the content editor container */
+.cs-message-input__content-editor-container {
+	background-color: transparent !important;
+}
+
+/* Remove background from scrollbar container */
+.scrollbar-container.cs-message-input__content-editor-container {
+	background-color: transparent !important;
+}
+
+/* Remove light blue backgrounds from chatscope components */
+.cs-chat-container {
+	background-color: transparent !important;
+}
+
+.cs-message-list {
+	background-color: transparent !important;
+}
+
+.cs-conversation-header {
+	background-color: transparent !important;
+}
+
+/* Fix chat background for dark mode */
+.cs-main-container {
+	background-color: transparent !important;
+}
+
+.cs-chat-container {
+	background-color: transparent !important;
+}
+
+/* Ensure chat background adapts to theme */
+.cs-main-container .cs-chat-container {
+	background-color: transparent !important;
+}
+
+/* Dark mode specific overrides */
+.dark .cs-main-container {
+	background-color: transparent !important;
+}
+
+.dark .cs-chat-container {
+	background-color: transparent !important;
+}
+
+.dark .cs-message-list {
+	background-color: transparent !important;
+}
+
+/* Fix message input for dark mode */
+.dark .cs-message-input {
+	background-color: transparent !important;
+}
+
+.dark .cs-message-input__content-editor-wrapper {
+	background-color: #374151 !important;
+	border-color: #4b5563 !important;
+}
+
+.dark .cs-message-input__content-editor {
+	background-color: transparent !important;
+	color: #f9fafb !important;
+}
+
+.dark .cs-message-input__content-editor::placeholder {
+	color: #9ca3af !important;
+}
+
+.dark .cs-button--send {
+	background-color: #3b82f6 !important;
+	color: white !important;
+}
+
+.dark .cs-button--send:hover {
+	background-color: #2563eb !important;
+}
+
+.dark .cs-button--send:disabled {
+	background-color: #6b7280 !important;
+	color: #d1d5db !important;
+}
+
+/* Custom message styling */
+.cs-message--outgoing .cs-message__content {
+	background-color: #007bff !important;
+	color: white !important;
+	border-radius: 18px 18px 4px 18px !important;
+	padding: 8px 16px !important;
+}
+
+.cs-message--incoming .cs-message__content {
+	background-color: #e3f2fd !important;
+	color: #000000 !important;
+	border-radius: 4px 18px 18px 18px !important;
+	padding: 8px 16px !important;
+}
+
+.dark .cs-message--incoming .cs-message__content {
+	background-color: #1e3a5f !important;
+	color: #ffffff !important;
+	border-radius: 4px 18px 18px 18px !important;
+	padding: 8px 16px !important;
 }

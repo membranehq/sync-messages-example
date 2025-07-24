@@ -88,7 +88,8 @@ The application properly handles various platform data structures:
 - **MongoDB**: Data storage (via Mongoose)
 - **date-fns**: Date formatting utilities
 - **Lucide React**: Icon library
-- **@chatscope/chat-ui-kit-react**: Chat UI components and interface
+- **@chatscope/chat-ui-kit-react**: Professional chat UI components and interface
+- **@chatscope/chat-ui-kit-styles**: Chat UI styling and themes
 
 ## Getting Started
 
@@ -138,7 +139,7 @@ The application follows a clean architecture pattern:
 
 You can customize the chat interface by:
 
-- Modifying the `ChatMessage` component for different message styles
+- Customizing the chatscope components for different message styles
 - Updating the `ChatList` component for different chat list layouts
 - Adding new Integration.app actions for additional functionality
 - Extending the message and chat types for platform-specific data

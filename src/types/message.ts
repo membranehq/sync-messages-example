@@ -6,6 +6,7 @@ export interface Message {
 	chatId?: string;
 	integrationId: string;
 	platformName?: string;
+	status?: "pending" | "sent" | "failed";
 }
 
 export interface Chat {
