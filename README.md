@@ -34,6 +34,7 @@ This is a Next.js application that demonstrates how to integrate with various me
 - Real-time message updates (refreshes every 30 seconds)
 - Message statistics and platform information
 - Sync functionality to fetch fresh data from integrations
+- **Persistent sync status**: Loading state persists across page refreshes using localStorage
 - Platform badges showing source of each message/chat
 
 ## API Endpoints
@@ -90,6 +91,17 @@ The application properly handles various platform data structures:
 - **Lucide React**: Icon library
 - **@chatscope/chat-ui-kit-react**: Professional chat UI components and interface
 - **@chatscope/chat-ui-kit-styles**: Chat UI styling and themes
+
+## Technical Features
+
+### Persistent Sync Status
+
+The application implements persistent sync status using localStorage to ensure that sync loading states survive page refreshes:
+
+- **localStorage Integration**: Sync status is stored in browser localStorage
+- **Stale Detection**: Automatically detects and resets sync status that's been running for more than 5 minutes
+- **Error Handling**: Robust error handling for localStorage operations with fallback behavior
+- **User Experience**: Shows last sync time on hover for better user feedback
 
 ## Getting Started
 

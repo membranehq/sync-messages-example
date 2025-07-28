@@ -20,12 +20,18 @@ export default function MessagesPage() {
 		mutate: mutateMessages,
 	} = useMessages();
 	const { chats, isLoading: chatsLoading, mutate: refreshChats } = useChats();
-	const { syncMessages } = useSyncMessages();
+	const { syncMessages, isSyncing, lastSyncTime, status, error } =
+		useSyncMessages();
 
 	// State
 	const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
 	const [isRefreshing, setIsRefreshing] = useState(false);
-	const [isSyncing, setIsSyncing] = useState(false);
+
+	// Computed values
+	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+	const selectedChatName = selectedChat?.name;
+	const selectedChatIntegrationId = selectedChat?.integrationId;
+	const selectedChatPlatformName = selectedChat?.platformName;
 
 	// Helper functions
 	const createNewMessage = (content: string): Message => {
@@ -82,14 +88,15 @@ export default function MessagesPage() {
 
 	const handleSync = async () => {
 		try {
-			setIsSyncing(true);
+			console.log("🚀 handleSync called");
 			const result = await syncMessages();
-			console.log("Sync result:", result);
+			console.log("📊 Sync result:", result);
 			await Promise.all([mutateMessages(), refreshChats()]);
+			console.log("🔄 Data refreshed after sync");
 		} catch (error) {
-			console.error("Failed to sync messages:", error);
-		} finally {
-			setIsSyncing(false);
+			console.error("💥 Failed to sync messages:", error);
+			// Re-throw the error so the hook can properly handle it
+			throw error;
 		}
 	};
 
@@ -137,7 +144,16 @@ export default function MessagesPage() {
 				console.error("Failed to send message to third-party system:", error);
 			}
 		},
-		[selectedChatId, messages, mutateMessages]
+		[
+			selectedChatId,
+			addMessageToCache,
+			createNewMessage,
+			selectedChat?.participants,
+			selectedChatIntegrationId,
+			selectedChatName,
+			selectedChatPlatformName,
+			updateCacheWithStatus,
+		]
 	);
 
 	const handleRetryMessage = useCallback(
@@ -189,14 +205,16 @@ export default function MessagesPage() {
 				console.error("Failed to retry message:", error);
 			}
 		},
-		[selectedChatId, messages, mutateMessages]
+		[
+			selectedChatId,
+			selectedChat?.participants,
+			selectedChatIntegrationId,
+			selectedChatName,
+			selectedChatPlatformName,
+			updateCacheWithStatus,
+		]
 	);
 
-	// Computed values
-	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
-	const selectedChatName = selectedChat?.name;
-	const selectedChatIntegrationId = selectedChat?.integrationId;
-	const selectedChatPlatformName = selectedChat?.platformName;
 	const uniquePlatformsCount = new Set(
 		messages.map((m) => m.platformName).filter(Boolean)
 	).size;
@@ -216,14 +234,26 @@ export default function MessagesPage() {
 					disabled={isSyncing}
 					variant="outline"
 					className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
+					title={
+						lastSyncTime
+							? `Last synced: ${new Date(lastSyncTime).toLocaleString()}`
+							: "No previous sync"
+					}
 				>
 					{isSyncing ? (
 						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 					) : (
 						<Download className="mr-2 h-4 w-4" />
 					)}
-					{isSyncing ? "Syncing..." : "Sync Messages"}
+					{isSyncing ? `Syncing... (${status})` : "Sync Messages"}
 				</Button>
+
+				{/* Error display */}
+				{error && (
+					<div className="text-red-600 dark:text-red-400 text-sm mt-2">
+						Error: {error}
+					</div>
+				)}
 				<Button
 					onClick={handleRefresh}
 					disabled={isRefreshing}
@@ -259,7 +289,7 @@ export default function MessagesPage() {
 	);
 
 	const ChatViewSection = () => (
-		<div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+		<div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
 			<ChatscopeChat
 				messages={messages}
 				selectedChatId={selectedChatId}
