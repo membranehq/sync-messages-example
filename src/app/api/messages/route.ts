@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
 
 		await connectDB();
 
-		// Fetch messages from MongoDB
-		const messages = await Message.find({ customerId: auth.customerId })
+		// Fetch messages from MongoDB - include both user's messages and webhook messages (default customerId)
+		const messages = await Message.find({
+			$or: [{ customerId: auth.customerId }, { customerId: "default" }],
+		})
 			.sort({ timestamp: 1 })
 			.limit(1000); // Limit to prevent performance issues
 

@@ -7,7 +7,6 @@ import { useSyncMessages } from "@/hooks/use-sync-messages";
 import { Message } from "@/types/message";
 import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
 import { ensureAuth } from "@/lib/auth";
-import { ChatList } from "@/components/chat-list";
 import { ChatscopeChat } from "@/components/chatscope-chat";
 import { ChatListSection } from "@/components/chat-list-section";
 import { Button } from "@/components/ui/button";
