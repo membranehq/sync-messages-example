@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import { useChats } from "@/hooks/use-chats";
 import { useSyncMessages } from "@/hooks/use-sync-messages";
@@ -9,6 +9,7 @@ import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
 import { ensureAuth } from "@/lib/auth";
 import { ChatList } from "@/components/chat-list";
 import { ChatscopeChat } from "@/components/chatscope-chat";
+import { ChatListSection } from "@/components/chat-list-section";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, MessageCircle, Download, Loader2 } from "lucide-react";
 
@@ -26,8 +27,28 @@ export default function MessagesPage() {
 	// State
 	const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
 	const [isRefreshing, setIsRefreshing] = useState(false);
+	const [chatSearchQuery, setChatSearchQuery] = useState("");
+
+	// Stable callback for search
+	const handleSearchChange = useCallback((value: string) => {
+		setChatSearchQuery(value);
+	}, []);
 
 	// Computed values
+	const filteredChats = useMemo(
+		() =>
+			chats.filter(
+				(chat) =>
+					chat.name.toLowerCase().includes(chatSearchQuery.toLowerCase()) ||
+					chat.platformName
+						?.toLowerCase()
+						.includes(chatSearchQuery.toLowerCase()) ||
+					chat.lastMessage
+						?.toLowerCase()
+						.includes(chatSearchQuery.toLowerCase())
+			),
+		[chats, chatSearchQuery]
+	);
 	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
 	const selectedChatName = selectedChat?.name;
 	const selectedChatIntegrationId = selectedChat?.integrationId;
@@ -269,25 +290,6 @@ export default function MessagesPage() {
 		</div>
 	);
 
-	const ChatListSection = () => (
-		<div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
-			<div className="flex items-center space-x-2 p-4 border-b border-gray-200 dark:border-gray-700">
-				<MessageCircle className="h-5 w-5 text-gray-500" />
-				<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					Chats
-				</h2>
-			</div>
-			<div className="flex-1 overflow-y-auto p-4">
-				<ChatList
-					chats={chats}
-					selectedChatId={selectedChatId}
-					onChatSelect={setSelectedChatId}
-					isLoading={chatsLoading}
-				/>
-			</div>
-		</div>
-	);
-
 	const ChatViewSection = () => (
 		<div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
 			<ChatscopeChat
@@ -355,7 +357,14 @@ export default function MessagesPage() {
 
 				{/* Main Content */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-					<ChatListSection />
+					<ChatListSection
+						chats={filteredChats}
+						selectedChatId={selectedChatId}
+						onChatSelect={setSelectedChatId}
+						isLoading={chatsLoading}
+						searchQuery={chatSearchQuery}
+						onSearchChange={handleSearchChange}
+					/>
 					<ChatViewSection />
 				</div>
 
