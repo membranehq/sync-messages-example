@@ -8,6 +8,10 @@ import { getAuthFromRequest } from "@/lib/server-auth";
 import { getIntegrationClient } from "@/lib/integration-app-client";
 import { formatTimestamp } from "@/lib/utils";
 
+// Buffer function to handle rate limiting
+const buffer = (ms: number) =>
+	new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function POST(request: NextRequest) {
 	const auth = getAuthFromRequest(request);
 	let syncId: string = "";
@@ -54,7 +58,14 @@ export async function POST(request: NextRequest) {
 		let totalChats = 0;
 
 		// 3. Process each connection
-		for (const connection of connections) {
+		for (let i = 0; i < connections.length; i++) {
+			const connection = connections[i];
+
+			// Buffer between connections (except for the first one)
+			if (i > 0) {
+				console.log(`⏳ Buffering 2 seconds between connections...`);
+				await buffer(2000);
+			}
 			try {
 				console.log(
 					`Processing connection: ${connection.id} (${
@@ -62,11 +73,39 @@ export async function POST(request: NextRequest) {
 					})`
 				);
 
+				// Buffer before API call to handle rate limiting
+				console.log(`⏳ Buffering 2 seconds before get-chats API call...`);
+				await buffer(2000);
+
 				// Get chats first
-				const chatsResult = await client
-					.connection(connection.id)
-					.action("get-chats")
-					.run();
+				let chatsResult;
+				try {
+					chatsResult = await client
+						.connection(connection.id)
+						.action("get-chats")
+						.run();
+				} catch (error) {
+					console.error(
+						`Rate limit error for get-chats on ${connection.name}:`,
+						error
+					);
+					// If rate limited, wait longer and retry once
+					if (
+						error &&
+						typeof error === "object" &&
+						"status" in error &&
+						error.status === 429
+					) {
+						console.log(`🔄 Rate limited, waiting 5 seconds before retry...`);
+						await buffer(5000);
+						chatsResult = await client
+							.connection(connection.id)
+							.action("get-chats")
+							.run();
+					} else {
+						throw error;
+					}
+				}
 
 				if (chatsResult.output?.records) {
 					const chats = chatsResult.output.records as Record<string, unknown>[];
@@ -154,13 +193,48 @@ export async function POST(request: NextRequest) {
 								((chat.fields as Record<string, unknown>)?.id as string);
 							const channelId = chatId;
 
-							const messagesResult = await client
-								.connection(connection.id)
-								.action("get-messages")
-								.run({
-									cursor: "",
-									channelId: channelId,
-								});
+							// Buffer before API call to handle rate limiting
+							console.log(
+								`⏳ Buffering 2 seconds before get-messages API call for chat ${chatId}...`
+							);
+							await buffer(2000);
+
+							let messagesResult;
+							try {
+								messagesResult = await client
+									.connection(connection.id)
+									.action("get-messages")
+									.run({
+										cursor: "",
+										channelId: channelId,
+									});
+							} catch (error) {
+								console.error(
+									`Rate limit error for get-messages on ${connection.name} chat ${chatId}:`,
+									error
+								);
+								// If rate limited, wait longer and retry once
+								if (
+									error &&
+									typeof error === "object" &&
+									"status" in error &&
+									error.status === 429
+								) {
+									console.log(
+										`🔄 Rate limited, waiting 5 seconds before retry...`
+									);
+									await buffer(5000);
+									messagesResult = await client
+										.connection(connection.id)
+										.action("get-messages")
+										.run({
+											cursor: "",
+											channelId: channelId,
+										});
+								} else {
+									throw error;
+								}
+							}
 
 							if (messagesResult.output?.records) {
 								const messages = messagesResult.output.records as Record<
@@ -297,7 +371,8 @@ export async function POST(request: NextRequest) {
 		);
 
 		// Update sync status to completed
-		await SyncStatus.findOneAndUpdate(
+		console.log(`🔄 Updating sync status to completed for syncId: ${syncId}`);
+		const updatedSyncStatus = await SyncStatus.findOneAndUpdate(
 			{ customerId: auth.customerId, syncId },
 			{
 				status: "completed",
@@ -305,8 +380,34 @@ export async function POST(request: NextRequest) {
 				lastSyncTime: new Date(),
 				totalMessages,
 				totalChats,
-			}
+			},
+			{ new: true }
 		);
+
+		// Validate the update was successful
+		if (!updatedSyncStatus) {
+			throw new Error("Failed to update sync status to completed");
+		}
+
+		console.log(`✅ Sync status updated successfully:`, {
+			syncId: updatedSyncStatus.syncId,
+			status: updatedSyncStatus.status,
+			isSyncing: updatedSyncStatus.isSyncing,
+			totalMessages: updatedSyncStatus.totalMessages,
+			totalChats: updatedSyncStatus.totalChats,
+		});
+
+		// Double-check the status was actually updated
+		const verifyStatus = await SyncStatus.findOne({
+			customerId: auth.customerId,
+			syncId,
+		});
+
+		console.log(`🔍 Verification - Final sync status:`, {
+			syncId: verifyStatus?.syncId,
+			status: verifyStatus?.status,
+			isSyncing: verifyStatus?.isSyncing,
+		});
 
 		return NextResponse.json(
 			{
@@ -321,14 +422,23 @@ export async function POST(request: NextRequest) {
 
 		// Update sync status to failed
 		if (syncId) {
-			await SyncStatus.findOneAndUpdate(
+			console.log(`❌ Updating sync status to failed for syncId: ${syncId}`);
+			const failedSyncStatus = await SyncStatus.findOneAndUpdate(
 				{ customerId: auth.customerId, syncId },
 				{
 					status: "failed",
 					isSyncing: false,
 					error: error instanceof Error ? error.message : "Unknown error",
-				}
+				},
+				{ new: true }
 			);
+
+			console.log(`❌ Sync status updated to failed:`, {
+				syncId: failedSyncStatus?.syncId,
+				status: failedSyncStatus?.status,
+				isSyncing: failedSyncStatus?.isSyncing,
+				error: failedSyncStatus?.error,
+			});
 		}
 
 		return NextResponse.json(

@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
 
 		await connectDB();
 
-		// Fetch chats from MongoDB
-		const chats = await Chat.find({ customerId: auth.customerId })
+		// Fetch chats from MongoDB - include both user's chats and webhook chats (default customerId)
+		const chats = await Chat.find({
+			$or: [{ customerId: auth.customerId }, { customerId: "default" }],
+		})
 			.sort({ lastMessageTime: -1 })
 			.limit(100); // Limit to prevent performance issues
 

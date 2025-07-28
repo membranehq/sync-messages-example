@@ -26,29 +26,67 @@ export async function GET(request: NextRequest) {
 			});
 		}
 
-		// Check if the sync is stale (running for more than 30 seconds)
+		// Only check for stale sync if it's actually still running and not already completed
+		if (
+			syncStatus.isSyncing &&
+			syncStatus.status !== "completed" &&
+			syncStatus.status !== "failed"
+		) {
+			const now = new Date();
+			const syncDuration = now.getTime() - syncStatus.startTime.getTime();
+			const isStale = syncDuration > 300 * 1000; // 5 minutes timeout
+
+			console.log(`⏱️ Sync duration check:`, {
+				syncId: syncStatus.syncId,
+				durationSeconds: Math.round(syncDuration / 1000),
+				isStale,
+				status: syncStatus.status,
+			});
+
+			if (isStale) {
+				console.log(
+					`🔄 Detected stale sync status for customer ${auth.customerId}, resetting...`
+				);
+
+				// Update the sync status to completed (stale)
+				const staleUpdate = await SyncStatus.findByIdAndUpdate(
+					syncStatus._id,
+					{
+						isSyncing: false,
+						status: "completed",
+						error: "Sync timed out",
+					},
+					{ new: true }
+				);
+
+				console.log(`⏰ Stale sync reset:`, {
+					syncId: staleUpdate?.syncId,
+					status: staleUpdate?.status,
+					isSyncing: staleUpdate?.isSyncing,
+				});
+
+				return NextResponse.json({
+					isSyncing: false,
+					lastSyncTime: syncStatus.lastSyncTime,
+					status: "completed",
+				});
+			}
+		}
+
+		// Add debug logging
 		const now = new Date();
 		const syncDuration = now.getTime() - syncStatus.startTime.getTime();
-		const isStale = syncStatus.isSyncing && syncDuration > 30 * 1000;
-
-		if (isStale) {
-			console.log(
-				`🔄 Detected stale sync status for customer ${auth.customerId}, resetting...`
-			);
-
-			// Update the sync status to completed (stale)
-			await SyncStatus.findByIdAndUpdate(syncStatus._id, {
-				isSyncing: false,
-				status: "completed",
-				error: "Sync timed out",
-			});
-
-			return NextResponse.json({
-				isSyncing: false,
-				lastSyncTime: syncStatus.lastSyncTime,
-				status: "completed",
-			});
-		}
+		console.log(`📊 Sync status for customer ${auth.customerId}:`, {
+			isSyncing: syncStatus.isSyncing,
+			status: syncStatus.status,
+			syncId: syncStatus.syncId,
+			startTime: syncStatus.startTime,
+			lastSyncTime: syncStatus.lastSyncTime,
+			error: syncStatus.error,
+			totalMessages: syncStatus.totalMessages,
+			totalChats: syncStatus.totalChats,
+			syncDurationSeconds: Math.round(syncDuration / 1000),
+		});
 
 		return NextResponse.json({
 			isSyncing: syncStatus.isSyncing,
