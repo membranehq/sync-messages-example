@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
 			});
 		}
 
-		// Check if the sync is stale (running for more than 10 seconds)
+		// Check if the sync is stale (running for more than 30 seconds)
 		const now = new Date();
 		const syncDuration = now.getTime() - syncStatus.startTime.getTime();
-		const isStale = syncStatus.isSyncing && syncDuration > 10 * 1000;
+		const isStale = syncStatus.isSyncing && syncDuration > 30 * 1000;
 
 		if (isStale) {
 			console.log(

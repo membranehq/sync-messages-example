@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 					(userData.id as string) ||
 					(userData.user_id as string) ||
 					(userData.externalUserId as string) ||
-					"unknown";
+					`unknown-${connection.id}-${Date.now()}`; // Make unknown IDs unique per connection
 
 				// Use platform from the response or fallback to connection name
 				const platformName =
@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
 					{
 						customerId: auth.customerId,
 						platformId: connection.id,
-						externalUserId,
 					},
 					{
 						customerId: auth.customerId, // Our internal customer ID
