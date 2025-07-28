@@ -103,7 +103,7 @@ npm install -g @membranehq/cli
 
 2. Set up your configuration file `memebrane.config.yml` with the workspace info
 
-3. Run the `push` methos to clone the required structure to your workspace
+3. Run the `push` method to clone the required structure to your workspace
 
 ```bash
 membrane push -w <your-workspace-key-here>
