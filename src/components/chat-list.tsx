@@ -1,19 +1,22 @@
 import { Chat } from "@/types/message";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, Users } from "lucide-react";
+import { memo } from "react";
 
 interface ChatListProps {
 	chats: Chat[];
 	selectedChatId?: string;
 	onChatSelect: (chatId: string) => void;
 	isLoading?: boolean;
+	searchQuery?: string;
 }
 
-export function ChatList({
+export const ChatList = memo(function ChatList({
 	chats,
 	selectedChatId,
 	onChatSelect,
 	isLoading,
+	searchQuery,
 }: ChatListProps) {
 	if (isLoading) {
 		return (
@@ -32,10 +35,12 @@ export function ChatList({
 			<div className="text-center py-8">
 				<MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
 				<h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-					No chats found
+					{searchQuery ? "No chats match your search" : "No chats found"}
 				</h3>
 				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-					Connect to messaging platforms to see your chats here.
+					{searchQuery
+						? "Try adjusting your search terms or clear the search."
+						: "Connect to messaging platforms to see your chats here."}
 				</p>
 			</div>
 		);
@@ -115,4 +120,4 @@ export function ChatList({
 			))}
 		</div>
 	);
-}
+});

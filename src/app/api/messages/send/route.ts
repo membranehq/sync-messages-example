@@ -16,24 +16,10 @@ interface SendMessageRequest {
 	messageId?: string; // Optional: for retrying existing messages
 }
 
-interface SendMessageResponse {
-	success: boolean;
-	messageId?: string;
-	flowRunId?: string;
-	error?: string;
-}
-
-interface FlowRunStatus {
-	id: string;
-	status: "running" | "completed" | "failed";
-	output?: any;
-	error?: string;
-}
-
 interface WebhookPayload {
 	flowRunId: string;
 	status: "completed" | "failed";
-	output?: any;
+	output?: Record<string, unknown>;
 	error?: string;
 	internalMessageId?: string;
 	externalMessageId?: string;
@@ -205,14 +191,7 @@ export async function PUT(request: NextRequest) {
 		);
 
 		const body: WebhookPayload = await request.json();
-		const {
-			flowRunId,
-			status,
-			output,
-			error,
-			internalMessageId,
-			externalMessageId,
-		} = body;
+		const { flowRunId, status, error, externalMessageId } = body;
 
 		console.log(
 			`Webhook received for flow run ${flowRunId} with status: ${status}`
@@ -319,83 +298,4 @@ export async function PUT(request: NextRequest) {
 			{ status: 500 }
 		);
 	}
-}
-
-/**
- * Poll for flow run completion
- * This function will check the flow run status until it completes or fails
- */
-async function pollFlowRunCompletion(
-	client: any,
-	flowRunId: string,
-	maxAttempts: number = 30, // 30 seconds max
-	pollInterval: number = 1000 // 1 second intervals
-): Promise<FlowRunStatus> {
-	for (let attempt = 0; attempt < maxAttempts; attempt++) {
-		try {
-			console.log(
-				`Checking flow run status (attempt ${attempt + 1}/${maxAttempts})`
-			);
-
-			// Get flow run output
-			const flowRun = await client.flowRun(flowRunId).getOutput();
-
-			console.log(`Flow run status:`, flowRun);
-
-			// Check if flow is completed
-			if (flowRun.status === "completed") {
-				return {
-					id: flowRunId,
-					status: "completed",
-					output: flowRun.output,
-				};
-			}
-
-			// Check if flow failed
-			if (flowRun.status === "failed") {
-				return {
-					id: flowRunId,
-					status: "failed",
-					error: flowRun.error || "Flow execution failed",
-				};
-			}
-
-			// If still running, wait and try again
-			if (flowRun.status === "running") {
-				console.log(`Flow still running, waiting ${pollInterval}ms...`);
-				await new Promise((resolve) => setTimeout(resolve, pollInterval));
-				continue;
-			}
-
-			// Unknown status
-			return {
-				id: flowRunId,
-				status: "failed",
-				error: `Unknown flow status: ${flowRun.status}`,
-			};
-		} catch (error) {
-			console.error(
-				`Error checking flow run status (attempt ${attempt + 1}):`,
-				error
-			);
-
-			// If we've tried enough times, give up
-			if (attempt === maxAttempts - 1) {
-				return {
-					id: flowRunId,
-					status: "failed",
-					error: "Timeout waiting for flow completion",
-				};
-			}
-
-			// Wait before retrying
-			await new Promise((resolve) => setTimeout(resolve, pollInterval));
-		}
-	}
-
-	return {
-		id: flowRunId,
-		status: "failed",
-		error: "Timeout waiting for flow completion",
-	};
 }

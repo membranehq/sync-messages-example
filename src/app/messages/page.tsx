@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import { useChats } from "@/hooks/use-chats";
 import { useSyncMessages } from "@/hooks/use-sync-messages";
@@ -9,6 +9,7 @@ import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
 import { ensureAuth } from "@/lib/auth";
 import { ChatList } from "@/components/chat-list";
 import { ChatscopeChat } from "@/components/chatscope-chat";
+import { ChatListSection } from "@/components/chat-list-section";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, MessageCircle, Download, Loader2 } from "lucide-react";
 
@@ -20,12 +21,38 @@ export default function MessagesPage() {
 		mutate: mutateMessages,
 	} = useMessages();
 	const { chats, isLoading: chatsLoading, mutate: refreshChats } = useChats();
-	const { syncMessages } = useSyncMessages();
+	const { syncMessages, isSyncing, lastSyncTime, status, error } =
+		useSyncMessages();
 
 	// State
 	const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
 	const [isRefreshing, setIsRefreshing] = useState(false);
-	const [isSyncing, setIsSyncing] = useState(false);
+	const [chatSearchQuery, setChatSearchQuery] = useState("");
+
+	// Stable callback for search
+	const handleSearchChange = useCallback((value: string) => {
+		setChatSearchQuery(value);
+	}, []);
+
+	// Computed values
+	const filteredChats = useMemo(
+		() =>
+			chats.filter(
+				(chat) =>
+					chat.name.toLowerCase().includes(chatSearchQuery.toLowerCase()) ||
+					chat.platformName
+						?.toLowerCase()
+						.includes(chatSearchQuery.toLowerCase()) ||
+					chat.lastMessage
+						?.toLowerCase()
+						.includes(chatSearchQuery.toLowerCase())
+			),
+		[chats, chatSearchQuery]
+	);
+	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+	const selectedChatName = selectedChat?.name;
+	const selectedChatIntegrationId = selectedChat?.integrationId;
+	const selectedChatPlatformName = selectedChat?.platformName;
 
 	// Helper functions
 	const createNewMessage = (content: string): Message => {
@@ -82,14 +109,15 @@ export default function MessagesPage() {
 
 	const handleSync = async () => {
 		try {
-			setIsSyncing(true);
+			console.log("🚀 handleSync called");
 			const result = await syncMessages();
-			console.log("Sync result:", result);
+			console.log("📊 Sync result:", result);
 			await Promise.all([mutateMessages(), refreshChats()]);
+			console.log("🔄 Data refreshed after sync");
 		} catch (error) {
-			console.error("Failed to sync messages:", error);
-		} finally {
-			setIsSyncing(false);
+			console.error("💥 Failed to sync messages:", error);
+			// Re-throw the error so the hook can properly handle it
+			throw error;
 		}
 	};
 
@@ -137,7 +165,16 @@ export default function MessagesPage() {
 				console.error("Failed to send message to third-party system:", error);
 			}
 		},
-		[selectedChatId, messages, mutateMessages]
+		[
+			selectedChatId,
+			addMessageToCache,
+			createNewMessage,
+			selectedChat?.participants,
+			selectedChatIntegrationId,
+			selectedChatName,
+			selectedChatPlatformName,
+			updateCacheWithStatus,
+		]
 	);
 
 	const handleRetryMessage = useCallback(
@@ -189,14 +226,16 @@ export default function MessagesPage() {
 				console.error("Failed to retry message:", error);
 			}
 		},
-		[selectedChatId, messages, mutateMessages]
+		[
+			selectedChatId,
+			selectedChat?.participants,
+			selectedChatIntegrationId,
+			selectedChatName,
+			selectedChatPlatformName,
+			updateCacheWithStatus,
+		]
 	);
 
-	// Computed values
-	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
-	const selectedChatName = selectedChat?.name;
-	const selectedChatIntegrationId = selectedChat?.integrationId;
-	const selectedChatPlatformName = selectedChat?.platformName;
 	const uniquePlatformsCount = new Set(
 		messages.map((m) => m.platformName).filter(Boolean)
 	).size;
@@ -216,14 +255,26 @@ export default function MessagesPage() {
 					disabled={isSyncing}
 					variant="outline"
 					className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
+					title={
+						lastSyncTime
+							? `Last synced: ${new Date(lastSyncTime).toLocaleString()}`
+							: "No previous sync"
+					}
 				>
 					{isSyncing ? (
 						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 					) : (
 						<Download className="mr-2 h-4 w-4" />
 					)}
-					{isSyncing ? "Syncing..." : "Sync Messages"}
+					{isSyncing ? `Syncing... (${status})` : "Sync Messages"}
 				</Button>
+
+				{/* Error display */}
+				{error && (
+					<div className="text-red-600 dark:text-red-400 text-sm mt-2">
+						Error: {error}
+					</div>
+				)}
 				<Button
 					onClick={handleRefresh}
 					disabled={isRefreshing}
@@ -239,27 +290,8 @@ export default function MessagesPage() {
 		</div>
 	);
 
-	const ChatListSection = () => (
-		<div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
-			<div className="flex items-center space-x-2 p-4 border-b border-gray-200 dark:border-gray-700">
-				<MessageCircle className="h-5 w-5 text-gray-500" />
-				<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					Chats
-				</h2>
-			</div>
-			<div className="flex-1 overflow-y-auto p-4">
-				<ChatList
-					chats={chats}
-					selectedChatId={selectedChatId}
-					onChatSelect={setSelectedChatId}
-					isLoading={chatsLoading}
-				/>
-			</div>
-		</div>
-	);
-
 	const ChatViewSection = () => (
-		<div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+		<div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
 			<ChatscopeChat
 				messages={messages}
 				selectedChatId={selectedChatId}
@@ -325,7 +357,14 @@ export default function MessagesPage() {
 
 				{/* Main Content */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-					<ChatListSection />
+					<ChatListSection
+						chats={filteredChats}
+						selectedChatId={selectedChatId}
+						onChatSelect={setSelectedChatId}
+						isLoading={chatsLoading}
+						searchQuery={chatSearchQuery}
+						onSearchChange={handleSearchChange}
+					/>
 					<ChatViewSection />
 				</div>
 

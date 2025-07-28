@@ -6,7 +6,6 @@ import {
 	Message as ChatscopeMessage,
 	MessageInput,
 	ConversationHeader,
-	Avatar,
 } from "@chatscope/chat-ui-kit-react";
 import { RefreshCw } from "lucide-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
@@ -35,6 +34,33 @@ export function ChatscopeChat({
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
+
+	// Filter messages for the selected chat
+	const chatMessages = messages.filter((msg) => msg.chatId === selectedChatId);
+
+	// Convert our messages to chatscope format
+	const chatscopeMessages = chatMessages.map((msg) => ({
+		message: msg.content,
+		sentTime: new Date(msg.timestamp).toLocaleTimeString(),
+		sender: msg.sender,
+		direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
+			| "outgoing"
+			| "incoming",
+		position: "single" as const,
+		status: msg.status, // Add status to the message
+	}));
+
+	// Scroll to bottom when messages change
+	useEffect(() => {
+		scrollToBottom();
+	}, [messages]);
+
+	// Auto-scroll to bottom on initial load
+	useEffect(() => {
+		if (chatscopeMessages.length > 0) {
+			scrollToBottom();
+		}
+	}, [chatscopeMessages.length]);
 
 	if (isLoading) {
 		return (
@@ -81,33 +107,6 @@ export function ChatscopeChat({
 		);
 	}
 
-	// Filter messages for the selected chat
-	const chatMessages = messages.filter((msg) => msg.chatId === selectedChatId);
-
-	// Convert our messages to chatscope format
-	const chatscopeMessages = chatMessages.map((msg) => ({
-		message: msg.content,
-		sentTime: new Date(msg.timestamp).toLocaleTimeString(),
-		sender: msg.sender,
-		direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
-			| "outgoing"
-			| "incoming",
-		position: "single" as const,
-		status: msg.status, // Add status to the message
-	}));
-
-	// Scroll to bottom when messages change
-	useEffect(() => {
-		scrollToBottom();
-	}, [messages]);
-
-	// Auto-scroll to bottom on initial load
-	useEffect(() => {
-		if (chatscopeMessages.length > 0) {
-			scrollToBottom();
-		}
-	}, []);
-
 	const handleSendMessage = (message: string) => {
 		if (onSendMessage) {
 			onSendMessage(message);
@@ -116,8 +115,8 @@ export function ChatscopeChat({
 
 	return (
 		<div style={{ position: "relative", height: "100%" }}>
-			<MainContainer>
-				<ChatContainer>
+			<MainContainer style={{ border: "none", borderRadius: "0" }}>
+				<ChatContainer style={{ border: "none", borderRadius: "0" }}>
 					<ConversationHeader>
 						<ConversationHeader.Content>
 							<div className="ml-3">
@@ -141,7 +140,7 @@ export function ChatscopeChat({
 									{msg.direction === "outgoing" && msg.status && (
 										<div className="absolute -bottom-6 right-0 flex items-center space-x-2">
 											<span
-												className={`text-xs px-1.5 py-0.5 rounded-full text-xs ${
+												className={`text-xs px-1.5 py-0.5 rounded-full ${
 													msg.status === "pending"
 														? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
 														: msg.status === "sent"

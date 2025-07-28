@@ -2,18 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Message } from "@/models/message";
 import { Chat } from "@/models/chat";
+import { SyncStatus } from "@/models/sync-status";
+import { UserPlatform } from "@/models/user-platform";
 import { getAuthFromRequest } from "@/lib/server-auth";
 import { getIntegrationClient } from "@/lib/integration-app-client";
 import { formatTimestamp } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
+	const auth = getAuthFromRequest(request);
+	let syncId: string = "";
+
 	try {
-		const auth = getAuthFromRequest(request);
 		if (!auth.customerId) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
 		await connectDB();
+
+		// Get sync ID from request body
+		const body = await request.json();
+		syncId = body.syncId;
+
+		if (!syncId) {
+			return NextResponse.json(
+				{ error: "syncId is required" },
+				{ status: 400 }
+			);
+		}
+
+		// Update sync status to running
+		await SyncStatus.findOneAndUpdate(
+			{ customerId: auth.customerId, syncId },
+			{ status: "running", isSyncing: true }
+		);
 
 		// 1. Get Integration.app client
 		const client = await getIntegrationClient(auth);
@@ -176,6 +197,22 @@ export async function POST(request: NextRequest) {
 											(msg.author as string) ||
 											"Unknown";
 
+										// Check if this message was sent by the current user
+										// by comparing the sender with our stored external user IDs
+										const userPlatform = await UserPlatform.findOne({
+											customerId: auth.customerId,
+											platformId: connection.id,
+											externalUserId: sender,
+										});
+
+										const isFromCurrentUser = !!userPlatform;
+
+										if (isFromCurrentUser) {
+											console.log(
+												`✅ Message from current user (${sender}) in ${connection.name}`
+											);
+										}
+
 										// Extract and format timestamp
 										const rawTimestamp =
 											(rawFields?.ts as string) ||
@@ -219,9 +256,10 @@ export async function POST(request: NextRequest) {
 												chatId: chatId,
 												integrationId: connection.id,
 												platformName: connection.name || connection.id,
-												messageType: "third-party", // Mark as third-party message
+												messageType: isFromCurrentUser ? "user" : "third-party", // Mark as user message if sent by current user
 												externalMessageId: messageId, // Set the external message ID
 												customerId: auth.customerId,
+												status: "sent", // Imported messages are already sent on the external platform
 											},
 											{ upsert: true, new: true }
 										);
@@ -257,6 +295,19 @@ export async function POST(request: NextRequest) {
 		console.log(
 			`Sync completed: ${totalMessages} messages, ${totalChats} chats`
 		);
+
+		// Update sync status to completed
+		await SyncStatus.findOneAndUpdate(
+			{ customerId: auth.customerId, syncId },
+			{
+				status: "completed",
+				isSyncing: false,
+				lastSyncTime: new Date(),
+				totalMessages,
+				totalChats,
+			}
+		);
+
 		return NextResponse.json(
 			{
 				success: true,
@@ -267,6 +318,19 @@ export async function POST(request: NextRequest) {
 		);
 	} catch (error) {
 		console.error("Error syncing messages:", error);
+
+		// Update sync status to failed
+		if (syncId) {
+			await SyncStatus.findOneAndUpdate(
+				{ customerId: auth.customerId, syncId },
+				{
+					status: "failed",
+					isSyncing: false,
+					error: error instanceof Error ? error.message : "Unknown error",
+				}
+			);
+		}
+
 		return NextResponse.json(
 			{ error: "Failed to sync messages" },
 			{ status: 500 }

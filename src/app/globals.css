@@ -1,3 +1,4 @@
+/* stylelint-disable */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -213,4 +214,30 @@
 	color: #ffffff !important;
 	border-radius: 4px 18px 18px 18px !important;
 	padding: 8px 16px !important;
+}
+
+/* Chat list scrollbar styling */
+.overflow-y-auto::-webkit-scrollbar {
+	width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+	background: #cbd5e1;
+	border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+	background: #94a3b8;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+	background: #475569;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+	background: #64748b;
 }
