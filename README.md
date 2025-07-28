@@ -92,40 +92,44 @@ The application properly handles various platform data structures:
 - **@chatscope/chat-ui-kit-react**: Professional chat UI components and interface
 - **@chatscope/chat-ui-kit-styles**: Chat UI styling and themes
 
-## Technical Features
-
-### Persistent Sync Status
-
-The application implements persistent sync status using localStorage to ensure that sync loading states survive page refreshes:
-
-- **localStorage Integration**: Sync status is stored in browser localStorage
-- **Stale Detection**: Automatically detects and resets sync status that's been running for more than 5 minutes
-- **Error Handling**: Robust error handling for localStorage operations with fallback behavior
-- **User Experience**: Shows last sync time on hover for better user feedback
-
 ## Getting Started
 
-1. Install dependencies:
+1. install membrane on `/membrane`
+
+```bash
+cd membrane
+npm install -g @membranehq/cli
+```
+
+2. Set up your configuration file `memebrane.config.yml` with the workspace info
+
+3. Run the `push` methos to clone the required structure to your workspace
+
+```bash
+membrane push -w <your-workspace-key-here>
+```
+
+4. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Set up your environment variables:
+5. Set up your environment variables:
 
    ```bash
    cp .env.example .env.local
    ```
 
-3. Configure your Integration.app credentials in `.env.local`
+6. Configure your Integration.app credentials in `.env.local`
 
-4. Run the development server:
+7. Run the development server:
 
    ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal) in your browser
+8. Open [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal) in your browser
 
 ## Usage
 
