@@ -1,0 +1,6 @@
+id: 688773c67e68e15f9f5d9f44
+key: gmail
+name: Gmail
+connectorId: 64300cd1986ed1caad6e23ae
+baseUri: s3://integration-app-connectors/public/9c29637a-8512-4f98-817c-5faa1e0defdc
+connectorVersion: 1.5.2

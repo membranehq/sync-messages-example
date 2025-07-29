@@ -27,5 +27,4 @@ config:
   fieldMapping:
     key: messages
     includeRawFields: true
-isDeployed: true
 integrationKey: slack

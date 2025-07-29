@@ -20,5 +20,4 @@ config:
     $var: $.input.cursor
   fieldMapping:
     key: chats
-isDeployed: false
 integrationKey: whatsapp

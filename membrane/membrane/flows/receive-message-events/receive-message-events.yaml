@@ -20,7 +20,7 @@ nodes:
       dataSource:
         key: messages
     links:
-      - key: get-all-message-fields-by-id2
+      - key: get-all-message-fields-by-id
   get-all-message-fields-by-id:
     type: find-data-record-by-id
     name: Get all Message fields by Id
@@ -33,23 +33,18 @@ nodes:
       id:
         $var: $.input.message-created-trigger.record.id
     links:
-      - key: create-message-in-my-app
-  get-all-message-fields-by-id2:
-    type: find-data-record-by-id
-    name: Get all Message fields by Id
+      - key: send-message-payload-to-my-app
+  message-deleted-trigger:
+    type: data-record-deleted-trigger
+    name: Message Deleted Trigger
     config:
       dataSource:
         key: messages
-      id:
-        $var: $.input.message-updated-trigger.record.id
-      fieldMapping:
-        key: messages
-        includeRawFields: true
     links:
-      - key: update-message-in-my-app
-  create-message-in-my-app:
+      - key: send-message-payload-to-my-app
+  send-message-payload-to-my-app:
     type: api-request-to-your-app
-    name: Create Message in my App
+    name: Send Message payload to my App
     config:
       request:
         body:
@@ -58,35 +53,5 @@ nodes:
           data:
             $var: $.input.get-all-message-fields-by-id
     links: []
-  update-message-in-my-app:
-    type: api-request-to-your-app
-    name: Update Message in my App
-    config:
-      request:
-        body:
-          externalMessageId:
-            $var: $.input.get-all-message-fields-by-id2.id
-          data:
-            $var: $.input.get-all-message-fields-by-id2
-    links: []
-  delete-message-in-my-app:
-    type: api-request-to-your-app
-    name: Delete Message from My App
-    config:
-      request:
-        body:
-          externalMessageId:
-            $var: $.input.message-deleted-trigger.record.id
-        method: POST
-    links: []
-  message-deleted-trigger:
-    type: data-record-deleted-trigger
-    name: Message Deleted Trigger
-    config:
-      dataSource:
-        key: messages
-    links:
-      - key: delete-message-in-my-app
-autoCreateInstances: false
-customized: false
-isDeployed: false
+autoCreateInstances: true
+customized: true

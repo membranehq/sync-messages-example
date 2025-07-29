@@ -1,0 +1,15 @@
+isCustomized: true
+parentId: 688773a10fd23b4596ee34d3
+integrationId: 6881441c8bc4980214fdb45b
+key: get-user
+state: READY
+errors: []
+isDeactivated: false
+id: 688773ba28f0e8eb060cb60b
+name: Get User
+type: api-request-to-external-app
+config:
+  request:
+    path: /account
+    method: GET
+integrationKey: whatsapp

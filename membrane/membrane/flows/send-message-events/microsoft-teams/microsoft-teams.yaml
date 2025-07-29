@@ -140,5 +140,4 @@ nodes:
     links: []
 autoCreateInstances: false
 customized: false
-isDeployed: false
 integrationKey: microsoft-teams

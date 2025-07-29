@@ -22,8 +22,8 @@ integration:
   hasEvents: true
   hasGlobalWebhooks: true
   hasUdm: true
-  baseUri: s3://integration-app-connectors/public/6049f6e1-e0e2-4f8d-bd1b-a52bdd02b4ff
-  connectorVersion: 1.3.0
+  baseUri: s3://integration-app-connectors/public/62888f42-6315-4822-b97e-ef53b13a082a
+  connectorVersion: 1.3.1
   logoUri: https://static.integration.app/connectors/slack/logo.png
   dataCollectionsCount: 3
   operationsCount: 246
@@ -36,9 +36,11 @@ nodes:
     config:
       dataSource:
         key: messages
-      fieldMapping: {}
+      fieldMapping:
+        key: messages
+        includeRawFields: true
     links:
-      - key: get-all-message-fields-by-id
+      - key: send-message-payload-to-my-app
   message-updated-trigger:
     type: data-record-updated-trigger
     name: Message Updated Trigger
@@ -47,65 +49,7 @@ nodes:
         key: messages
       fieldMapping: {}
     links:
-      - key: get-all-message-fields-by-id2
-  get-all-message-fields-by-id:
-    type: find-data-record-by-id
-    name: Get all Message fields by Id
-    config:
-      dataSource:
-        key: messages
-      fieldMapping:
-        key: messages
-        includeRawFields: true
-      id:
-        $var: $.input.message-created-trigger.record.id
-    links:
-      - key: create-message-in-my-app
-  get-all-message-fields-by-id2:
-    type: find-data-record-by-id
-    name: Get all Message fields by Id
-    config:
-      dataSource:
-        key: messages
-      id:
-        $var: $.input.message-updated-trigger.record.id
-      fieldMapping:
-        key: messages
-        includeRawFields: true
-    links:
-      - key: update-message-in-my-app
-  create-message-in-my-app:
-    type: api-request-to-your-app
-    name: Create Message in my App
-    config:
-      request:
-        body:
-          externalMessageId:
-            $var: $.input.get-all-message-fields-by-id.id
-          data:
-            $var: $.input.get-all-message-fields-by-id
-    links: []
-  update-message-in-my-app:
-    type: api-request-to-your-app
-    name: Update Message in my App
-    config:
-      request:
-        body:
-          externalMessageId:
-            $var: $.input.get-all-message-fields-by-id2.id
-          data:
-            $var: $.input.get-all-message-fields-by-id2
-    links: []
-  delete-message-in-my-app:
-    type: api-request-to-your-app
-    name: Delete Message from My App
-    config:
-      request:
-        body:
-          externalMessageId:
-            $var: $.input.message-deleted-trigger.record.id
-        method: POST
-    links: []
+      - key: send-message-payload-to-my-app
   message-deleted-trigger:
     type: data-record-deleted-trigger
     name: Message Deleted Trigger
@@ -114,8 +58,29 @@ nodes:
         key: messages
       fieldMapping: {}
     links:
-      - key: delete-message-in-my-app
-autoCreateInstances: false
-customized: false
-isDeployed: false
+      - key: send-message-payload-to-my-app
+  send-message-payload-to-my-app:
+    type: api-request-to-your-app
+    name: Send Message payload to my App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.message-created-trigger.record.id
+          data:
+            $var: $.input.message-created-trigger.record.fields
+          customerId:
+            $var: $.user.internalId
+        uri: /api/messages/receive
+        method: POST
+    links: []
+  message:
+    type: connector-event-trigger
+    name: Message
+    config:
+      eventKey: message
+    links:
+      - key: send-message-payload-to-my-app
+autoCreateInstances: true
+customized: true
 integrationKey: slack

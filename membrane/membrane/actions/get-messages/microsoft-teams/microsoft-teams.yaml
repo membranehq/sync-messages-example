@@ -38,5 +38,4 @@ config:
   fieldMapping:
     key: messages
     includeRawFields: true
-isDeployed: false
 integrationKey: microsoft-teams

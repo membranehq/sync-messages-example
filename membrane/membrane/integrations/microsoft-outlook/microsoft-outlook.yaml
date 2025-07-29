@@ -1,0 +1,6 @@
+id: 688773c60a582d3a4b0a1d28
+key: microsoft-outlook
+name: Microsoft Outlook
+connectorId: 6466784d60f981f3ce696905
+baseUri: s3://integration-app-connectors/public/0ae5f413-12c9-4b83-a352-e0315235a306
+connectorVersion: 1.3.0

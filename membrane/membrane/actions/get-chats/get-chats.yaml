@@ -18,4 +18,3 @@ config:
     $var: $.input.cursor
   fieldMapping:
     key: chats
-isDeployed: true

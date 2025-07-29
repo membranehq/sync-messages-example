@@ -31,6 +31,8 @@ importValue:
     $var: $.user
   chatId:
     $var: $.conversationId
+  timestamp:
+    $var: $.ts
 integration:
   key: slack
   state: READY
@@ -47,8 +49,8 @@ integration:
   hasEvents: true
   hasGlobalWebhooks: true
   hasUdm: true
-  baseUri: s3://integration-app-connectors/public/6049f6e1-e0e2-4f8d-bd1b-a52bdd02b4ff
-  connectorVersion: 1.3.0
+  baseUri: s3://integration-app-connectors/public/62888f42-6315-4822-b97e-ef53b13a082a
+  connectorVersion: 1.3.1
   logoUri: https://static.integration.app/connectors/slack/logo.png
   dataCollectionsCount: 3
   operationsCount: 246

@@ -1,0 +1,24 @@
+isCustomized: true
+parentId: 688773a10fd23b4596ee34d3
+integrationId: 6881440ff2eacefeb83c3adf
+key: get-user
+state: READY
+errors: []
+isDeactivated: false
+id: 688773ba28f0e8eb060cb603
+name: Get User
+type: api-request-to-external-app
+config:
+  request:
+    path: /auth.test
+    method: GET
+  responseSchema:
+    type: object
+    properties:
+      user_id:
+        type: string
+outputMapping:
+  userId:
+    $var: $.output.data.user_id
+  platform: Slack
+integrationKey: slack
