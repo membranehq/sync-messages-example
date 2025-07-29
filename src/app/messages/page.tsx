@@ -151,9 +151,14 @@ export default function MessagesPage() {
 				});
 
 				if (response.success) {
-					// Keep status as "pending" - webhook will update to "sent" or "failed"
+					// Update status immediately based on response
+					updateCacheWithStatus(
+						updatedMessages,
+						newMessage.id,
+						response.status || "sent"
+					);
 					console.log(
-						"Message flow started successfully, waiting for webhook confirmation"
+						`Message sent successfully with status: ${response.status}`
 					);
 				} else {
 					updateCacheWithStatus(updatedMessages, newMessage.id, "failed");
@@ -212,9 +217,10 @@ export default function MessagesPage() {
 				});
 
 				if (response.success) {
-					// Keep status as "pending" - webhook will update to "sent" or "failed"
+					// Update status immediately based on response
+					updateCacheWithStatus(messages, messageId, response.status || "sent");
 					console.log(
-						"Message retry flow started successfully, waiting for webhook confirmation"
+						`Message retry successful with status: ${response.status}`
 					);
 				} else {
 					updateCacheWithStatus(messages, messageId, "failed");
