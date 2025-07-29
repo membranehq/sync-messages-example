@@ -16,15 +16,6 @@ interface SendMessageRequest {
 	messageId?: string; // Optional: for retrying existing messages
 }
 
-interface WebhookPayload {
-	flowRunId: string;
-	status: "completed" | "failed";
-	output?: Record<string, unknown>;
-	error?: string;
-	internalMessageId?: string;
-	externalMessageId?: string;
-}
-
 export async function POST(request: NextRequest) {
 	try {
 		const auth = getAuthFromRequest(request);
@@ -92,17 +83,33 @@ export async function POST(request: NextRequest) {
 				externalMessageId: "", // Will be filled by the flow
 			};
 
-			const flowRun = await client
+			const result = await client
 				.connection(integrationId)
-				.flow("send-message-events")
-				.run({
-					input,
-				});
+				.action("create-messages")
+				.run(input);
 
-			const flowRunId = flowRun.id;
-			console.log(`Flow run started with ID: ${flowRunId}`);
+			console.log(`Message sent successfully via action:`, result);
 
-			// Step 2: Save or update message in MongoDB with pending status
+			// Extract external message ID and status from the action result
+			const externalMessageId =
+				result?.output?.messageId || result?.output?.id || "";
+			const actionStatus = result?.output?.status || "completed";
+			const isSuccess =
+				actionStatus === "completed" || actionStatus === "success";
+
+			// Determine message status based on action result
+			const messageStatus = isSuccess ? "sent" : "failed";
+			const errorMessage = isSuccess ? "" : "Action execution failed";
+
+			console.log(`Action result:`, {
+				status: actionStatus,
+				isSuccess,
+				messageStatus,
+				externalMessageId,
+				error: errorMessage,
+			});
+
+			// Step 2: Save or update message in MongoDB with appropriate status
 			const messageToSave = {
 				id: internalMessageId,
 				content: message,
@@ -112,8 +119,9 @@ export async function POST(request: NextRequest) {
 				integrationId: integrationId,
 				platformName: platformName || "Unknown",
 				messageType: "user" as const, // Mark as user message
-				status: "pending" as const,
-				flowRunId: flowRunId,
+				status: messageStatus, // Set status based on action result
+				externalMessageId: externalMessageId, // Save the external message ID
+				error: errorMessage, // Save error message if failed
 			};
 
 			let savedMessage;
@@ -128,173 +136,35 @@ export async function POST(request: NextRequest) {
 					},
 					{ new: true }
 				);
-				console.log(
-					`Message updated in MongoDB with ID: ${savedMessage?.id} and flowRunId: ${flowRunId}`
-				);
+				console.log(`Message updated in MongoDB with ID: ${savedMessage?.id}`);
 			} else {
 				// Create new message
 				savedMessage = await Message.create({
 					...messageToSave,
 					customerId: auth.customerId,
 				});
-				console.log(
-					`Message saved to MongoDB with ID: ${savedMessage.id} and flowRunId: ${flowRunId}`
-				);
+				console.log(`Message saved to MongoDB with ID: ${savedMessage.id}`);
 			}
 
-			// Step 3: Return immediately with flow run ID
-			// The webhook will handle updating the message status when flow completes
+			// Step 3: Return immediately with actual status
+			// Since it's synchronous, we know the result immediately
 			return NextResponse.json({
-				success: true,
+				success: isSuccess,
 				messageId: savedMessage.id,
-				flowRunId: flowRunId,
-				status: "pending",
+				status: messageStatus,
+				externalMessageId: externalMessageId,
 			});
-		} catch (flowError) {
-			console.error("Error running flow:", flowError);
+		} catch (actionError) {
+			console.error("Error running action:", actionError);
 			return NextResponse.json({
 				success: false,
-				error: "Failed to execute flow",
+				error: "Failed to execute action",
 			});
 		}
 	} catch (error) {
 		console.error("Error sending message:", error);
 		return NextResponse.json(
 			{ error: "Failed to send message" },
-			{ status: 500 }
-		);
-	}
-}
-
-/**
- * Webhook endpoint for Integration.app to call when flow completes
- */
-export async function PUT(request: NextRequest) {
-	try {
-		// For webhooks, we need to handle Integration.app's authentication
-		// They send X-Integration-App-Token instead of our usual headers
-		const integrationAppToken = request.headers.get("X-Integration-App-Token");
-
-		if (!integrationAppToken) {
-			console.error("No Integration.app token provided in webhook");
-			return NextResponse.json(
-				{ error: "Unauthorized - No token" },
-				{ status: 401 }
-			);
-		}
-
-		// For now, we'll accept any valid Integration.app token
-		// In production, you might want to validate this token
-		console.log(
-			"Integration.app webhook received with token:",
-			integrationAppToken.substring(0, 20) + "..."
-		);
-
-		const body: WebhookPayload = await request.json();
-		const { flowRunId, status, error, externalMessageId } = body;
-
-		console.log(
-			`Webhook received for flow run ${flowRunId} with status: ${status}`
-		);
-
-		await connectDB();
-
-		// Debug: Let's see what messages exist in the database
-		const allMessages = await Message.find({}).limit(10);
-		console.log(
-			"All messages in database:",
-			allMessages.map((m) => ({
-				id: m.id,
-				flowRunId: m.flowRunId,
-				status: m.status,
-			}))
-		);
-
-		// Find the message by flow run ID
-		// For webhooks, we don't have customerId, so we'll search by flowRunId only
-		const message = await Message.findOne({
-			flowRunId: flowRunId,
-		});
-
-		if (!message) {
-			console.error(`Message not found for flow run ID: ${flowRunId}`);
-			console.error(
-				"Available flowRunIds:",
-				allMessages.map((m) => m.flowRunId).filter(Boolean)
-			);
-
-			// Try to find any pending message as a fallback
-			const pendingMessage = await Message.findOne({ status: "pending" });
-			if (pendingMessage) {
-				console.log(
-					`Found pending message with ID: ${pendingMessage.id}, updating it instead`
-				);
-				// Update this message instead
-				if (status === "completed") {
-					await Message.findOneAndUpdate(
-						{ _id: pendingMessage._id },
-						{
-							id: externalMessageId || pendingMessage.id, // Update the ID to match external platform
-							status: "sent",
-							externalMessageId: externalMessageId || "",
-							updatedAt: new Date(),
-						}
-					);
-					console.log(
-						`Message ${pendingMessage.id} marked as sent successfully with external ID: ${externalMessageId}`
-					);
-				} else if (status === "failed") {
-					await Message.findOneAndUpdate(
-						{ _id: pendingMessage._id },
-						{
-							status: "failed",
-							error: error || "Flow execution failed",
-							updatedAt: new Date(),
-						}
-					);
-					console.log(
-						`Message ${pendingMessage.id} marked as failed: ${error}`
-					);
-				}
-				return NextResponse.json({ success: true });
-			}
-
-			return NextResponse.json({ error: "Message not found" }, { status: 404 });
-		}
-
-		// Update message status based on flow completion
-		if (status === "completed") {
-			await Message.findOneAndUpdate(
-				{ _id: message._id },
-				{
-					id: externalMessageId || message.id, // Update the ID to match external platform
-					status: "sent",
-					externalMessageId: externalMessageId || "",
-					updatedAt: new Date(),
-				}
-			);
-
-			console.log(
-				`Message ${message.id} marked as sent successfully with external ID: ${externalMessageId}`
-			);
-		} else if (status === "failed") {
-			await Message.findOneAndUpdate(
-				{ _id: message._id },
-				{
-					status: "failed",
-					error: error || "Flow execution failed",
-					updatedAt: new Date(),
-				}
-			);
-
-			console.log(`Message ${message.id} marked as failed: ${error}`);
-		}
-
-		return NextResponse.json({ success: true });
-	} catch (error) {
-		console.error("Error processing webhook:", error);
-		return NextResponse.json(
-			{ error: "Failed to process webhook" },
 			{ status: 500 }
 		);
 	}

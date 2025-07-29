@@ -20,6 +20,8 @@ export interface SendMessageRequest {
 export interface SendMessageResponse {
 	success: boolean;
 	messageId?: string;
+	status?: "pending" | "sent" | "failed";
+	externalMessageId?: string;
 	error?: string;
 }
 
