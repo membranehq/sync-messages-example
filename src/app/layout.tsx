@@ -1,9 +1,10 @@
 import "./globals.css";
 import { ThemeProvider } from "@/app/providers";
-import { Header } from "@/components/header";
 import { inter } from "@/app/fonts";
 import { IntegrationProvider } from "./integration-provider";
 import { AuthProvider } from "./auth-provider";
+import { IntegrationProvider as AppIntegrationProvider } from "@/contexts/integration-context";
+import { Banner } from "@/components/banner";
 
 export const metadata = {
 	title: {
@@ -26,10 +27,10 @@ export default function RootLayout({
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<AuthProvider>
 						<IntegrationProvider>
-							<Header />
-							<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-								{children}
-							</main>
+							<AppIntegrationProvider>
+								<Banner />
+								<main className="h-[calc(100vh-40px)]">{children}</main>
+							</AppIntegrationProvider>
 						</IntegrationProvider>
 					</AuthProvider>
 				</ThemeProvider>

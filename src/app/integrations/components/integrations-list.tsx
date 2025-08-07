@@ -81,7 +81,7 @@ export function IntegrationList() {
 					const userResult = await integrationApp
 						.connection(connection.id)
 						.flow("get-users-ids")
-						.run();
+						.run({});
 
 					console.log("✅ User info fetched:", userResult);
 				} catch (error) {
@@ -110,7 +110,7 @@ export function IntegrationList() {
 		if (!integration.connection?.id) return;
 		try {
 			await integrationApp.connection(integration.connection.id).archive();
-			refresh();
+			await refresh();
 
 			// Clear the integration state when disconnecting
 			setIntegrationStates((prev) => ({
@@ -123,7 +123,7 @@ export function IntegrationList() {
 	};
 
 	return (
-		<div className="space-y-4 mt-8">
+		<div className="space-y-4">
 			<ul className="space-y-4">
 				{integrations.map((integration) => {
 					const state = integrationStates[integration.key] || {};

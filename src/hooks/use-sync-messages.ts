@@ -50,7 +50,7 @@ export function useSyncMessages() {
 		fetchSyncStatus();
 	}, []);
 
-	const syncMessages = async () => {
+	const syncMessages = async (integrationId?: string) => {
 		try {
 			console.log("🔄 Starting sync...");
 
@@ -86,7 +86,10 @@ export function useSyncMessages() {
 					...getAuthHeaders(),
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ syncId }),
+				body: JSON.stringify({
+					syncId,
+					integrationId, // Pass the integration ID if provided
+				}),
 			});
 
 			if (!syncResponse.ok) {
