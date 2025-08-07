@@ -3,6 +3,20 @@ import { generateIntegrationToken } from "./integration-token";
 import type { AuthCustomer } from "./auth";
 import { getMentionPattern } from "./mention-patterns";
 
+// Type definitions for API responses
+interface DataLinkTableInstance {
+	id: string;
+	dataLinkTable?: {
+		key: string;
+	};
+	connectionId: string;
+}
+
+interface DataLinkTableLink {
+	externalRecordId: string;
+	appRecordId: string;
+}
+
 // Buffer function to handle rate limiting
 const buffer = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,7 +58,7 @@ async function getDataLinkTableInstanceId(
 
 		// Find the users data link table instance for this connection
 		const usersInstance = instances.find(
-			(instance: any) =>
+			(instance: DataLinkTableInstance) =>
 				instance.dataLinkTable?.key === "users" &&
 				instance.connectionId === connectionId
 		);
@@ -93,7 +107,7 @@ async function getUserMappings(
 
 		// Create a mapping from externalRecordId to appRecordId
 		const userMappings: Record<string, string> = {};
-		links.forEach((link: any) => {
+		links.forEach((link: DataLinkTableLink) => {
 			if (link.externalRecordId && link.appRecordId) {
 				userMappings[link.externalRecordId] = link.appRecordId;
 			}

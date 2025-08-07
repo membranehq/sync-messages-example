@@ -50,6 +50,12 @@ export function ChatscopeChat({
 		status: msg.status, // Add status to the message
 	}));
 
+	// Find the last outgoing message index for status display
+	const lastOutgoingIndex = chatscopeMessages
+		.map((m, i) => ({ message: m, index: i }))
+		.filter(({ message }) => message.direction === "outgoing")
+		.pop()?.index;
+
 	// Scroll to bottom when messages change
 	useEffect(() => {
 		scrollToBottom();
@@ -133,44 +139,49 @@ export function ChatscopeChat({
 							// Find the original message to get the ID for retry
 							const originalMessage = chatMessages[index];
 
+							// Check if this is the last outgoing message
+							const isLastOutgoingMessage = lastOutgoingIndex === index;
+
 							return (
 								<div key={index} className="relative">
 									<ChatscopeMessage model={msg} />
-									{/* Status indicator and retry button for outgoing messages */}
-									{msg.direction === "outgoing" && msg.status && (
-										<div className="absolute -bottom-6 right-0 flex items-center space-x-2">
-											<span
-												className={`text-xs px-1.5 py-0.5 rounded-full ${
-													msg.status === "pending"
-														? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-														: msg.status === "sent"
-														? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-														: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-												}`}
-											>
-												{msg.status === "pending"
-													? "Pending"
-													: msg.status === "sent"
-													? "Sent"
-													: "Failed"}
-											</span>
-
-											{/* Retry icon for failed messages */}
-											{msg.status === "failed" && onRetryMessage && (
-												<button
-													onClick={() => onRetryMessage(originalMessage.id)}
-													className="text-xs p-1 text-red-500 hover:text-red-700 transition-colors"
-													title="Retry sending message"
+									{/* Status indicator and retry button only for the last outgoing message */}
+									{msg.direction === "outgoing" &&
+										msg.status &&
+										isLastOutgoingMessage && (
+											<div className="absolute -bottom-6 right-0 flex items-center space-x-2">
+												<span
+													className={`text-xs px-1.5 py-0.5 rounded-full ${
+														msg.status === "pending"
+															? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+															: msg.status === "sent"
+															? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+															: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+													}`}
 												>
-													<RefreshCw className="h-3 w-3" />
-												</button>
-											)}
-										</div>
-									)}
+													{msg.status === "pending"
+														? "Pending"
+														: msg.status === "sent"
+														? "Sent"
+														: "Failed"}
+												</span>
+
+												{/* Retry icon for failed messages */}
+												{msg.status === "failed" && onRetryMessage && (
+													<button
+														onClick={() => onRetryMessage(originalMessage.id)}
+														className="text-xs p-1 text-red-500 hover:text-red-700 transition-colors"
+														title="Retry sending message"
+													>
+														<RefreshCw className="h-3 w-3" />
+													</button>
+												)}
+											</div>
+										)}
 								</div>
 							);
 						})}
-						<div ref={messagesEndRef} />
+						<div ref={messagesEndRef} className="pb-4" />
 					</MessageList>
 					{onSendMessage && (
 						<MessageInput

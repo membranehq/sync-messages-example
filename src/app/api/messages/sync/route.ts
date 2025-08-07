@@ -24,9 +24,10 @@ export async function POST(request: NextRequest) {
 
 		await connectDB();
 
-		// Get sync ID from request body
+		// Get sync ID and integration ID from request body
 		const body = await request.json();
 		syncId = body.syncId;
+		const integrationId = body.integrationId; // Optional integration ID to filter by
 
 		if (!syncId) {
 			return NextResponse.json(
@@ -46,11 +47,23 @@ export async function POST(request: NextRequest) {
 
 		// 2. Find all available connections
 		const connectionsResponse = await client.connections.find();
-		const connections = connectionsResponse.items || [];
+		let connections = connectionsResponse.items || [];
+
+		// Filter by integration ID if provided
+		if (integrationId) {
+			connections = connections.filter(
+				(connection) => connection.id === integrationId
+			);
+			console.log(`🔍 Filtering sync to integration: ${integrationId}`);
+		}
 
 		if (connections.length === 0) {
 			return NextResponse.json(
-				{ error: "No apps connected to sync messages from" },
+				{
+					error: integrationId
+						? "Specified integration not found"
+						: "No apps connected to sync messages from",
+				},
 				{ status: 400 }
 			);
 		}
@@ -255,7 +268,7 @@ export async function POST(request: NextRequest) {
 										const fields = msg.fields as Record<string, unknown>;
 
 										// Extract message content from various possible fields
-										let content =
+										const content =
 											(fields?.text as string) ||
 											(rawFields?.text as string) ||
 											(msg.content as string) ||
@@ -264,12 +277,13 @@ export async function POST(request: NextRequest) {
 											"";
 
 										// Replace mentions with user names if content contains mentions
+										let processedContent = content;
 										if (content && content.includes("<@")) {
 											try {
 												console.log(
 													`🔄 Processing mentions in message content`
 												);
-												content = await replaceMentions(
+												processedContent = await replaceMentions(
 													content,
 													auth,
 													connection.id,
@@ -346,7 +360,7 @@ export async function POST(request: NextRequest) {
 											},
 											{
 												id: messageId,
-												content: content,
+												content: processedContent,
 												sender: sender,
 												timestamp: timestamp,
 												chatId: chatId,
@@ -369,7 +383,7 @@ export async function POST(request: NextRequest) {
 											: "Processed message:";
 
 										console.log(
-											`${logPrefix} ${content.substring(
+											`${logPrefix} ${processedContent.substring(
 												0,
 												50
 											)}... from ${sender}`
