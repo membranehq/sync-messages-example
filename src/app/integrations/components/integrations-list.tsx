@@ -38,7 +38,9 @@ export function IntegrationList() {
 			}));
 
 			console.log(`🔗 Connecting to ${integration.name}...`);
-			await integrationApp.integration(integration.key).openNewConnection();
+			const connection = await integrationApp
+				.integration(integration.key)
+				.openNewConnection();
 
 			// Wait for the connection to be established and refresh the integrations list
 			await refresh();
@@ -71,6 +73,23 @@ export function IntegrationList() {
 			}));
 
 			console.log("✅ Connection and user platform info fetch completed");
+
+			// Get user info after successful connection using the returned connection
+			if (connection?.id) {
+				try {
+					console.log(`🔍 Fetching user info for connection: ${connection.id}`);
+					const userResult = await integrationApp
+						.connection(connection.id)
+						.flow("get-users-ids")
+						.run();
+
+					console.log("✅ User info fetched:", userResult);
+				} catch (error) {
+					console.error("Failed to fetch user info:", error);
+				}
+			} else {
+				console.warn("No connection ID returned from openNewConnection");
+			}
 		} catch (error) {
 			console.error("Failed to connect or fetch user platform info:", error);
 

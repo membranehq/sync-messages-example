@@ -7,6 +7,7 @@ import { UserPlatform } from "@/models/user-platform";
 import { getAuthFromRequest } from "@/lib/server-auth";
 import { getIntegrationClient } from "@/lib/integration-app-client";
 import { formatTimestamp } from "@/lib/utils";
+import { replaceMentions } from "@/lib/mention-replacer";
 
 // Buffer function to handle rate limiting
 const buffer = (ms: number) =>
@@ -254,13 +255,34 @@ export async function POST(request: NextRequest) {
 										const fields = msg.fields as Record<string, unknown>;
 
 										// Extract message content from various possible fields
-										const content =
+										let content =
 											(fields?.text as string) ||
 											(rawFields?.text as string) ||
 											(msg.content as string) ||
 											(msg.message as string) ||
 											(msg.text as string) ||
 											"";
+
+										// Replace mentions with user names if content contains mentions
+										if (content && content.includes("<@")) {
+											try {
+												console.log(
+													`🔄 Processing mentions in message content`
+												);
+												content = await replaceMentions(
+													content,
+													auth,
+													connection.id,
+													connection.name || connection.id
+												);
+											} catch (mentionError) {
+												console.error(
+													"Error processing mentions, keeping original content:",
+													mentionError
+												);
+												// Keep the original content if mention processing fails
+											}
+										}
 
 										// Extract sender information
 										const sender =
@@ -339,8 +361,15 @@ export async function POST(request: NextRequest) {
 										);
 
 										totalMessages++;
+
+										// Log if mentions were processed
+										const hasMentions = content.includes("<@");
+										const logPrefix = hasMentions
+											? "📝 Processed message with mentions:"
+											: "Processed message:";
+
 										console.log(
-											`Processed message: ${content.substring(
+											`${logPrefix} ${content.substring(
 												0,
 												50
 											)}... from ${sender}`
