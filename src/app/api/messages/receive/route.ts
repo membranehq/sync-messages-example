@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
 		console.log(
 			`Incoming message webhook received: ${externalMessageId} from ${data.ownerId} in chat ${data.chatId}`
 		);
-		console.log("Webhook data structure:", JSON.stringify(data, null, 2));
 
 		await connectDB();
 
@@ -59,9 +58,6 @@ export async function POST(request: NextRequest) {
 			platformName = "Unknown",
 			integrationId = "unknown",
 		} = data;
-
-		console.log(`Extracted ownerName: ${ownerName}`);
-		console.log(`Extracted ownerId: ${ownerId}`);
 
 		// Generate a unique message ID if not provided
 		const messageId = id || `msg-${Date.now()}-${Math.random()}`;
@@ -128,7 +124,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Save the incoming message to MongoDB
-		const messageData = {
+		const newMessage = await Message.create({
 			id: messageId,
 			content: content,
 			sender: ownerId,
@@ -141,14 +137,7 @@ export async function POST(request: NextRequest) {
 			externalMessageId: externalMessageId,
 			status: "sent", // Incoming messages are already sent on the external platform
 			customerId,
-		};
-
-		console.log(
-			"Saving message with data:",
-			JSON.stringify(messageData, null, 2)
-		);
-
-		const newMessage = await Message.create(messageData);
+		});
 
 		console.log(
 			`✅ Incoming message saved: ${content.substring(

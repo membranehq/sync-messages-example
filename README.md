@@ -101,7 +101,7 @@ cd membrane
 npm install -g @membranehq/cli
 ```
 
-2. Set up your configuration file `memebrane.config.yml` with the workspace info
+2. Set up your configuration file `membrane.config.yml` with the workspace info
 
 3. Run the `push` method to clone the required structure to your workspace
 
@@ -162,13 +162,9 @@ You can customize the chat interface by:
 - Customizing timestamp handling in `src/lib/utils.ts`
 - Adding new platform integrations by extending the sync logic
 
-## Contributing
+## todos
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+[] Add filtering to import methods
 
 ## License
 

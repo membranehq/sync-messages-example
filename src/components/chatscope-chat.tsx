@@ -11,6 +11,10 @@ import { RefreshCw } from "lucide-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { useEffect, useRef } from "react";
 import { MessageCircle } from "lucide-react";
+import {
+	getMessageSenderName,
+	shouldShowSenderName,
+} from "@/lib/message-utils";
 
 interface ChatscopeChatProps {
 	messages: Message[];
@@ -40,20 +44,17 @@ export function ChatscopeChat({
 
 	// Convert our messages to chatscope format
 	const chatscopeMessages = chatMessages.map((msg) => {
-		const senderName = msg.ownerName || msg.sender;
-		console.log(
-			`Message sender: ${senderName}, ownerName: ${msg.ownerName}, sender: ${msg.sender}`
-		);
+		const senderName = getMessageSenderName(msg);
 
 		return {
 			message: msg.content,
 			sentTime: new Date(msg.timestamp).toLocaleTimeString(),
-			sender: senderName, // Use ownerName if available, fallback to sender
+			sender: senderName,
 			direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
 				| "outgoing"
 				| "incoming",
 			position: "single" as const,
-			status: msg.status, // Add status to the message
+			status: msg.status,
 		};
 	});
 
@@ -150,28 +151,15 @@ export function ChatscopeChat({
 							const isLastOutgoingMessage = lastOutgoingIndex === index;
 
 							// Check if we should show the sender name
-							// Show name if:
-							// 1. It's an incoming message AND
-							// 2. Either it's the first message OR the previous message was from a different sender OR the previous message was outgoing
-							const shouldShowSenderName = (() => {
-								if (msg.direction !== "incoming") return false;
-
-								if (index === 0) return true; // First message
-
-								const previousMessage = chatscopeMessages[index - 1];
-								if (!previousMessage) return true;
-
-								// Show name if previous message was from different sender or was outgoing
-								return (
-									previousMessage.sender !== msg.sender ||
-									previousMessage.direction === "outgoing"
-								);
-							})();
+							const shouldShowName = shouldShowSenderName(
+								chatscopeMessages,
+								index
+							);
 
 							return (
 								<div key={index} className="relative">
 									{/* Show sender name for incoming messages (only when needed) */}
-									{shouldShowSenderName && (
+									{shouldShowName && (
 										<div className="text-xs text-gray-500 dark:text-gray-400 ml-4 mb-1">
 											{msg.sender}
 										</div>
