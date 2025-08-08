@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 			id: msg.id,
 			content: msg.content,
 			sender: msg.sender,
+			ownerName: msg.ownerName,
 			timestamp: msg.timestamp,
 			chatId: msg.chatId,
 			integrationId: msg.integrationId,

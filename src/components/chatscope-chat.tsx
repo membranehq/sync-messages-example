@@ -11,6 +11,10 @@ import { RefreshCw } from "lucide-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { useEffect, useRef } from "react";
 import { MessageCircle } from "lucide-react";
+import {
+	getMessageSenderName,
+	shouldShowSenderName,
+} from "@/lib/message-utils";
 
 interface ChatscopeChatProps {
 	messages: Message[];
@@ -39,16 +43,20 @@ export function ChatscopeChat({
 	const chatMessages = messages.filter((msg) => msg.chatId === selectedChatId);
 
 	// Convert our messages to chatscope format
-	const chatscopeMessages = chatMessages.map((msg) => ({
-		message: msg.content,
-		sentTime: new Date(msg.timestamp).toLocaleTimeString(),
-		sender: msg.sender,
-		direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
-			| "outgoing"
-			| "incoming",
-		position: "single" as const,
-		status: msg.status, // Add status to the message
-	}));
+	const chatscopeMessages = chatMessages.map((msg) => {
+		const senderName = getMessageSenderName(msg);
+
+		return {
+			message: msg.content,
+			sentTime: new Date(msg.timestamp).toLocaleTimeString(),
+			sender: senderName,
+			direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
+				| "outgoing"
+				| "incoming",
+			position: "single" as const,
+			status: msg.status,
+		};
+	});
 
 	// Find the last outgoing message index for status display
 	const lastOutgoingIndex = chatscopeMessages
@@ -142,8 +150,20 @@ export function ChatscopeChat({
 							// Check if this is the last outgoing message
 							const isLastOutgoingMessage = lastOutgoingIndex === index;
 
+							// Check if we should show the sender name
+							const shouldShowName = shouldShowSenderName(
+								chatscopeMessages,
+								index
+							);
+
 							return (
 								<div key={index} className="relative">
+									{/* Show sender name for incoming messages (only when needed) */}
+									{shouldShowName && (
+										<div className="text-xs text-gray-500 dark:text-gray-400 ml-4 mb-1">
+											{msg.sender}
+										</div>
+									)}
 									<ChatscopeMessage model={msg} />
 									{/* Status indicator and retry button only for the last outgoing message */}
 									{msg.direction === "outgoing" &&

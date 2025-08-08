@@ -10,6 +10,7 @@ interface IncomingMessagePayload {
 		id: string;
 		content: string;
 		ownerId: string;
+		ownerName?: string;
 		chatId: string;
 		timestamp?: string;
 		platformName?: string;
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
 			id,
 			content,
 			ownerId,
+			ownerName,
 			chatId,
 			timestamp,
 			platformName = "Unknown",
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
 			id: messageId,
 			content: content,
 			sender: ownerId,
+			ownerName: ownerName,
 			timestamp: formattedTimestamp,
 			chatId: chatId,
 			integrationId: integrationId,

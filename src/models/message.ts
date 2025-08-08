@@ -4,6 +4,7 @@ export interface IMessage extends Document {
 	id: string;
 	content: string;
 	sender: string;
+	ownerName?: string;
 	timestamp: string;
 	chatId?: string;
 	integrationId: string;
@@ -23,6 +24,7 @@ const MessageSchema = new Schema<IMessage>(
 		id: { type: String, required: true },
 		content: { type: String, required: true },
 		sender: { type: String, required: true },
+		ownerName: { type: String },
 		timestamp: { type: String, required: true },
 		chatId: { type: String },
 		integrationId: { type: String, required: true },
