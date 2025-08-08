@@ -39,16 +39,23 @@ export function ChatscopeChat({
 	const chatMessages = messages.filter((msg) => msg.chatId === selectedChatId);
 
 	// Convert our messages to chatscope format
-	const chatscopeMessages = chatMessages.map((msg) => ({
-		message: msg.content,
-		sentTime: new Date(msg.timestamp).toLocaleTimeString(),
-		sender: msg.sender,
-		direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
-			| "outgoing"
-			| "incoming",
-		position: "single" as const,
-		status: msg.status, // Add status to the message
-	}));
+	const chatscopeMessages = chatMessages.map((msg) => {
+		const senderName = msg.ownerName || msg.sender;
+		console.log(
+			`Message sender: ${senderName}, ownerName: ${msg.ownerName}, sender: ${msg.sender}`
+		);
+
+		return {
+			message: msg.content,
+			sentTime: new Date(msg.timestamp).toLocaleTimeString(),
+			sender: senderName, // Use ownerName if available, fallback to sender
+			direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
+				| "outgoing"
+				| "incoming",
+			position: "single" as const,
+			status: msg.status, // Add status to the message
+		};
+	});
 
 	// Find the last outgoing message index for status display
 	const lastOutgoingIndex = chatscopeMessages
@@ -142,8 +149,33 @@ export function ChatscopeChat({
 							// Check if this is the last outgoing message
 							const isLastOutgoingMessage = lastOutgoingIndex === index;
 
+							// Check if we should show the sender name
+							// Show name if:
+							// 1. It's an incoming message AND
+							// 2. Either it's the first message OR the previous message was from a different sender OR the previous message was outgoing
+							const shouldShowSenderName = (() => {
+								if (msg.direction !== "incoming") return false;
+
+								if (index === 0) return true; // First message
+
+								const previousMessage = chatscopeMessages[index - 1];
+								if (!previousMessage) return true;
+
+								// Show name if previous message was from different sender or was outgoing
+								return (
+									previousMessage.sender !== msg.sender ||
+									previousMessage.direction === "outgoing"
+								);
+							})();
+
 							return (
 								<div key={index} className="relative">
+									{/* Show sender name for incoming messages (only when needed) */}
+									{shouldShowSenderName && (
+										<div className="text-xs text-gray-500 dark:text-gray-400 ml-4 mb-1">
+											{msg.sender}
+										</div>
+									)}
 									<ChatscopeMessage model={msg} />
 									{/* Status indicator and retry button only for the last outgoing message */}
 									{msg.direction === "outgoing" &&

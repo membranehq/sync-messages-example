@@ -307,6 +307,13 @@ export async function POST(request: NextRequest) {
 											(msg.author as string) ||
 											"Unknown";
 
+										// Extract owner name information
+										const ownerName =
+											(fields?.ownerName as string) ||
+											(rawFields?.ownerName as string) ||
+											(msg.ownerName as string) ||
+											undefined;
+
 										// Check if this message was sent by the current user
 										// by comparing the sender with our stored external user IDs
 										const userPlatform = await UserPlatform.findOne({
@@ -362,6 +369,7 @@ export async function POST(request: NextRequest) {
 												id: messageId,
 												content: processedContent,
 												sender: sender,
+												ownerName: ownerName,
 												timestamp: timestamp,
 												chatId: chatId,
 												integrationId: connection.id,

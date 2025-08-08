@@ -2,6 +2,7 @@ export interface Message {
 	id: string;
 	content: string;
 	sender: string;
+	ownerName?: string;
 	timestamp: string;
 	chatId?: string;
 	integrationId: string;
