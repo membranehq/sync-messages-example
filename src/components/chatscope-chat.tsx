@@ -15,7 +15,6 @@ import {
 	getMessageSenderName,
 	shouldShowSenderName,
 	getMessageDisplayContent,
-	isHTMLMessage,
 } from "@/lib/message-utils";
 
 interface ChatscopeChatProps {

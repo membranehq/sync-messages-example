@@ -13,7 +13,7 @@ export function extractTextFromHTML(htmlContent: string): string {
 	}
 
 	// Remove HTML tags but preserve line breaks
-	let text = htmlContent
+	const text = htmlContent
 		// Remove entire <style> blocks (including CSS content)
 		.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
 		// Remove entire <script> blocks

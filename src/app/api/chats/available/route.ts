@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthFromRequest } from "@/lib/server-auth";
 import { getIntegrationClient } from "@/lib/integration-app-client";
 
+interface ChatRecord {
+	id?: string;
+	name?: string;
+	title?: string;
+	subject?: string;
+	participants?: string[];
+	members?: string[];
+	last_message?: string;
+	recent_message?: string;
+	last_message_time?: string;
+	updated_at?: string;
+	fields?: {
+		id?: string;
+		name?: string;
+		participants?: string[];
+		members?: string[];
+		last_message?: string;
+		updated?: string;
+	};
+	rawFields?: {
+		name?: string;
+		ts?: string;
+	};
+}
+
 export async function POST(request: NextRequest) {
 	try {
 		const auth = getAuthFromRequest(request);
@@ -31,29 +56,33 @@ export async function POST(request: NextRequest) {
 			});
 
 		if (chatsResult.output?.records) {
-			const availableChats = chatsResult.output.records.map((chat: any) => ({
-				id: chat.id || chat.fields?.id,
-				name:
-					chat.fields?.name ||
-					chat.rawFields?.name ||
-					chat.name ||
-					chat.title ||
-					chat.subject ||
-					"Unnamed Chat",
-				participants:
-					chat.participants ||
-					chat.members ||
-					chat.fields?.participants ||
-					chat.fields?.members ||
-					[],
-				lastMessage:
-					chat.last_message || chat.recent_message || chat.fields?.last_message,
-				lastMessageTime:
-					chat.last_message_time ||
-					chat.updated_at ||
-					chat.fields?.updated ||
-					chat.rawFields?.ts,
-			}));
+			const availableChats = chatsResult.output.records.map(
+				(chat: ChatRecord) => ({
+					id: chat.id || chat.fields?.id,
+					name:
+						chat.fields?.name ||
+						chat.rawFields?.name ||
+						chat.name ||
+						chat.title ||
+						chat.subject ||
+						"Unnamed Chat",
+					participants:
+						chat.participants ||
+						chat.members ||
+						chat.fields?.participants ||
+						chat.fields?.members ||
+						[],
+					lastMessage:
+						chat.last_message ||
+						chat.recent_message ||
+						chat.fields?.last_message,
+					lastMessageTime:
+						chat.last_message_time ||
+						chat.updated_at ||
+						chat.fields?.updated ||
+						chat.rawFields?.ts,
+				})
+			);
 
 			return NextResponse.json({ chats: availableChats });
 		} else {
