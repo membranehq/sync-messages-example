@@ -14,6 +14,7 @@ import { MessageCircle } from "lucide-react";
 import {
 	getMessageSenderName,
 	shouldShowSenderName,
+	getMessageDisplayContent,
 } from "@/lib/message-utils";
 
 interface ChatscopeChatProps {
@@ -45,9 +46,10 @@ export function ChatscopeChat({
 	// Convert our messages to chatscope format
 	const chatscopeMessages = chatMessages.map((msg) => {
 		const senderName = getMessageSenderName(msg);
+		const displayContent = getMessageDisplayContent(msg.content);
 
 		return {
-			message: msg.content,
+			message: displayContent,
 			sentTime: new Date(msg.timestamp).toLocaleTimeString(),
 			sender: senderName,
 			direction: (msg.messageType === "user" ? "outgoing" : "incoming") as
