@@ -13,6 +13,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, MessageCircle, Download, Loader2, X } from "lucide-react";
 import { useIntegrationContext } from "@/contexts/integration-context";
+import { SyncChatsDialog } from "@/components/sync-chats-dialog";
 
 export default function MessagesPage() {
 	// Hooks
@@ -31,6 +32,7 @@ export default function MessagesPage() {
 	const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [chatSearchQuery, setChatSearchQuery] = useState("");
+	const [isSyncDialogOpen, setIsSyncDialogOpen] = useState(false);
 
 	// Stable callback for search
 	const handleSearchChange = useCallback((value: string) => {
@@ -129,17 +131,31 @@ export default function MessagesPage() {
 	};
 
 	const handleSync = async () => {
+		console.log(
+			"🔍 handleSync called with selectedIntegration:",
+			selectedIntegration
+		);
+		console.log(
+			"🔍 selectedIntegration?.connection?.id:",
+			selectedIntegration?.connection?.id
+		);
+		console.log("🔍 selectedIntegration?.key:", selectedIntegration?.key);
+
+		// Always open the sync dialog - it will handle app selection if needed
+		console.log("📱 Opening sync dialog");
+		setIsSyncDialogOpen(true);
+	};
+
+	const handleSyncSelectedChats = async (selectedChatIds: string[]) => {
 		try {
-			console.log("🚀 handleSync called");
-			// Pass the selected integration ID if one is selected
+			console.log("🚀 Syncing selected chats:", selectedChatIds);
 			const integrationId = selectedIntegration?.connection?.id;
-			const result = await syncMessages(integrationId);
+			const result = await syncMessages(integrationId, selectedChatIds);
 			console.log("📊 Sync result:", result);
 			await Promise.all([mutateMessages(), refreshChats()]);
 			console.log("🔄 Data refreshed after sync");
 		} catch (error) {
-			console.error("💥 Failed to sync messages:", error);
-			// Re-throw the error so the hook can properly handle it
+			console.error("💥 Failed to sync selected chats:", error);
 			throw error;
 		}
 	};
@@ -435,6 +451,20 @@ export default function MessagesPage() {
 					<StatsSection />
 				</div>
 			</div>
+
+			{/* Sync Chats Dialog */}
+			<SyncChatsDialog
+				isOpen={isSyncDialogOpen}
+				onClose={() => {
+					console.log("🔒 Closing sync dialog");
+					setIsSyncDialogOpen(false);
+				}}
+				integrationKey={
+					selectedIntegration?.key || selectedIntegration?.connection?.id
+				}
+				integrationName={selectedIntegration?.name}
+				onSyncSelected={handleSyncSelectedChats}
+			/>
 		</div>
 	);
 }

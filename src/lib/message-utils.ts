@@ -1,3 +1,10 @@
+import {
+	extractTextFromHTML,
+	containsHTML,
+	isEmailContent,
+	decodeUTF8Text,
+} from "./html-processor";
+
 /**
  * Utility functions for message handling
  */
@@ -13,6 +20,66 @@ export function getMessageSenderName(message: {
 }): string {
 	// Prefer ownerName if available, otherwise fall back to sender
 	return message.ownerName || message.sender;
+}
+
+/**
+ * Gets the display content for a message, processing HTML if needed
+ * @param content - The raw message content
+ * @returns Processed content suitable for display
+ */
+export function getMessageDisplayContent(content: string): string {
+	if (!content) return "";
+
+	let processedContent = content;
+
+	// If content contains HTML, extract readable text
+	if (containsHTML(content)) {
+		processedContent = extractTextFromHTML(content);
+	}
+
+	// Apply UTF-8 decoding to fix character encoding issues
+	processedContent = decodeUTF8Text(processedContent);
+
+	return processedContent;
+}
+
+/**
+ * Gets a preview of message content, truncating if needed
+ * @param content - The raw message content
+ * @param maxLength - Maximum length for preview
+ * @returns Truncated content suitable for preview
+ */
+export function getMessagePreview(
+	content: string,
+	maxLength: number = 100
+): string {
+	if (!content) return "";
+
+	const displayContent = getMessageDisplayContent(content);
+
+	if (displayContent.length <= maxLength) {
+		return displayContent;
+	}
+
+	return displayContent.substring(0, maxLength) + "...";
+}
+
+/**
+ * Checks if a message contains HTML content
+ * @param content - The message content to check
+ * @returns True if the content contains HTML
+ */
+export function isHTMLMessage(content: string): boolean {
+	return containsHTML(content);
+}
+
+/**
+ * Checks if a message is an email
+ * @param content - The message content to check
+ * @returns True if the content appears to be an email
+ */
+export function isEmailMessage(content: string): boolean {
+	return isEmailContent(content);
 }
 
 /**

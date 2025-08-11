@@ -50,7 +50,10 @@ export function useSyncMessages() {
 		fetchSyncStatus();
 	}, []);
 
-	const syncMessages = async (integrationId?: string) => {
+	const syncMessages = async (
+		integrationId?: string,
+		selectedChatIds?: string[]
+	) => {
 		try {
 			console.log("🔄 Starting sync...");
 
@@ -89,6 +92,7 @@ export function useSyncMessages() {
 				body: JSON.stringify({
 					syncId,
 					integrationId, // Pass the integration ID if provided
+					selectedChatIds, // Pass the selected chat IDs if provided
 				}),
 			});
 

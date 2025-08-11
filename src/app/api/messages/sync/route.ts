@@ -24,10 +24,11 @@ export async function POST(request: NextRequest) {
 
 		await connectDB();
 
-		// Get sync ID and integration ID from request body
+		// Get sync ID, integration ID, and selected chat IDs from request body
 		const body = await request.json();
 		syncId = body.syncId;
 		const integrationId = body.integrationId; // Optional integration ID to filter by
+		const selectedChatIds = body.selectedChatIds; // Optional array of specific chat IDs to sync
 
 		if (!syncId) {
 			return NextResponse.json(
@@ -122,7 +123,20 @@ export async function POST(request: NextRequest) {
 				}
 
 				if (chatsResult.output?.records) {
-					const chats = chatsResult.output.records as Record<string, unknown>[];
+					let chats = chatsResult.output.records as Record<string, unknown>[];
+
+					// Filter chats by selected chat IDs if provided
+					if (selectedChatIds && selectedChatIds.length > 0) {
+						chats = chats.filter((chat) => {
+							const chatId =
+								(chat.id as string) ||
+								((chat.fields as Record<string, unknown>)?.id as string);
+							return selectedChatIds.includes(chatId);
+						});
+						console.log(
+							`🔍 Filtering to ${chats.length} selected chats out of ${chatsResult.output.records.length} total`
+						);
+					}
 
 					// Save chats to MongoDB
 					for (const chat of chats) {
@@ -269,7 +283,9 @@ export async function POST(request: NextRequest) {
 
 										// Extract message content from various possible fields
 										const content =
+											(fields?.content as string) ||
 											(fields?.text as string) ||
+											(rawFields?.content as string) ||
 											(rawFields?.text as string) ||
 											(msg.content as string) ||
 											(msg.message as string) ||

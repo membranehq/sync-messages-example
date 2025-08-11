@@ -7,7 +7,7 @@ errors: []
 isDeactivated: false
 id: 6896564beee371aad3ccb798
 name: Get Messages
-type: list-data-records
+type: api-request-to-external-app
 inputSchema:
   type: object
   properties:
@@ -16,13 +16,29 @@ inputSchema:
     channelId:
       type: string
 config:
-  dataSource:
-    collectionKey: emails
-    collectionParameters:
-      userId: ''
-  cursor:
-    $var: $.input.cursor
-  fieldMapping:
-    key: messages
-    includeRawFields: true
+  request:
+    path: /gmail/v1/users/{userId}/threads/{id}?format=full
+    method: get
+    pathParameters:
+      userId: me
+      id:
+        $var: $.input.channelId
+outputMapping:
+  records:
+    $iterate:
+      source:
+        $var: $.output.data.messages
+      item:
+        id:
+          $var: $.item.id
+        fields:
+          id:
+            $var: $.item.id
+          ownerId:
+            $jsonata: $.item.payload.headers[name="From"].value
+          content:
+            $firstNotEmpty:
+              - $jsonata: >-
+                  $base64decode($replace($replace($string($.item.payload.body.data),"-","+"),"_","/"))
+              - $var: $.item.snippet
 integrationKey: gmail
