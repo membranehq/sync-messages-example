@@ -36,9 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		setAuth(newAuth);
 	};
 
-	// Ensure we always have both customerId and customerName
-	const hasCompleteAuth = auth?.customerId && auth?.customerName;
-
 	return (
 		<AuthContext.Provider
 			value={{
