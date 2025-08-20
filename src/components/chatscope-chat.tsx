@@ -9,7 +9,7 @@ import {
 import { RefreshCw } from "lucide-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { useEffect, useRef } from "react";
-import { MessageCircle, MessageSquare, MessagesSquare } from "lucide-react";
+import { MessageCircle, MessagesSquare } from "lucide-react";
 import {
 	getMessageSenderName,
 	shouldShowSenderName,
@@ -22,7 +22,6 @@ interface ChatscopeChatProps {
 	isLoading?: boolean;
 	onSendMessage?: (message: string) => void;
 	onRetryMessage?: (messageId: string) => void;
-	selectedChatName?: string;
 }
 
 export function ChatscopeChat({
@@ -31,7 +30,6 @@ export function ChatscopeChat({
 	isLoading,
 	onSendMessage,
 	onRetryMessage,
-	selectedChatName,
 }: ChatscopeChatProps) {
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -121,7 +119,7 @@ export function ChatscopeChat({
 						No messages found in chat
 					</h3>
 					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-						This chat doesn't have any messages yet.
+						This chat doesn&apos;t have any messages yet.
 					</p>
 				</div>
 			</div>

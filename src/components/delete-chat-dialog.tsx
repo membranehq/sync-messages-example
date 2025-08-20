@@ -62,9 +62,10 @@ export function DeleteChatDialog({
 						</DialogTitle>
 					</div>
 					<DialogDescription className="text-left">
-						Are you sure you want to delete <strong>"{chatName}"</strong>? This
-						action will permanently remove the chat and all its associated
-						messages from your local database. This action cannot be undone.
+						Are you sure you want to delete{" "}
+						<strong>&quot;{chatName}&quot;</strong>? This action will
+						permanently remove the chat and all its associated messages from
+						your local database. This action cannot be undone.
 					</DialogDescription>
 					<div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
 						<p className="text-xs text-blue-700 dark:text-blue-300">

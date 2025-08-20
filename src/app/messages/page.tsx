@@ -44,10 +44,6 @@ export default function MessagesPage() {
 		(integration) => integration.connection
 	);
 
-	// Check if integrations are still loading (if integrations array is empty but we're not in a loading state for other data)
-	const isIntegrationsLoading =
-		integrations.length === 0 && !messagesLoading && !chatsLoading;
-
 	// Add a small delay to prevent flash of "no connections" state
 	const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 

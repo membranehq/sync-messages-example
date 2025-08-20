@@ -1,7 +1,7 @@
 import { Chat } from "@/types/message";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, Users, Trash2, Download, Loader2 } from "lucide-react";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 
 interface ChatListProps {
