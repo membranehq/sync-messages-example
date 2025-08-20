@@ -88,3 +88,38 @@ export function validateMessage(message: string): {
 
 	return { isValid: true };
 }
+
+/**
+ * Delete a chat and all its associated messages
+ */
+export async function deleteChat(chatId: string): Promise<{
+	success: boolean;
+	deletedChat?: number;
+	deletedMessages?: number;
+	error?: string;
+}> {
+	try {
+		const response = await fetch("/api/chats", {
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+				...getAuthHeaders(),
+			},
+			body: JSON.stringify({ chatId }),
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json();
+			throw new Error(errorData.error || "Failed to delete chat");
+		}
+
+		const result = await response.json();
+		return result;
+	} catch (error) {
+		console.error("Error deleting chat:", error);
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
+}

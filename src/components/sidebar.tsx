@@ -74,10 +74,10 @@ export function Sidebar() {
 				<div className="pt-2">
 					<div
 						onClick={() => setIsDialogOpen(true)}
-						className="w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+						className="w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-blue-100 dark:bg-blue-800 hover:bg-blue-200 dark:hover:bg-blue-700"
 						title="Add Integration"
 					>
-						<Plus className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+						<Plus className="w-5 h-5 text-blue-600 dark:text-blue-300" />
 					</div>
 				</div>
 
@@ -99,7 +99,10 @@ export function Sidebar() {
 									style={{ opacity }}
 									title={`${integration.name} (Not connected)`}
 								>
-									<div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+									<div
+										onClick={() => setIsDialogOpen(true)}
+										className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800 cursor-pointer"
+									>
 										{integration.logoUri ? (
 											<img
 												src={integration.logoUri}

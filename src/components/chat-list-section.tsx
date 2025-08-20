@@ -8,6 +8,9 @@ interface ChatListSectionProps {
 	chats: Chat[];
 	selectedChatId?: string;
 	onChatSelect: (chatId: string) => void;
+	onChatDelete?: (chatId: string, chatName: string) => void;
+	onSyncChats?: () => void;
+	isSyncing?: boolean;
 	isLoading: boolean;
 	searchQuery: string;
 	onSearchChange: (value: string) => void;
@@ -17,6 +20,9 @@ export const ChatListSection = memo(function ChatListSection({
 	chats,
 	selectedChatId,
 	onChatSelect,
+	onChatDelete,
+	onSyncChats,
+	isSyncing,
 	isLoading,
 	searchQuery,
 	onSearchChange,
@@ -38,6 +44,9 @@ export const ChatListSection = memo(function ChatListSection({
 					chats={chats}
 					selectedChatId={selectedChatId}
 					onChatSelect={onChatSelect}
+					onChatDelete={onChatDelete}
+					onSyncChats={onSyncChats}
+					isSyncing={isSyncing}
 					isLoading={isLoading}
 					searchQuery={searchQuery}
 				/>

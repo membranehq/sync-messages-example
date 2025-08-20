@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import { useChats } from "@/hooks/use-chats";
 import { useSyncMessages } from "@/hooks/use-sync-messages";
@@ -11,9 +11,19 @@ import { ChatscopeChat } from "@/components/chatscope-chat";
 import { ChatListSection } from "@/components/chat-list-section";
 import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, MessageCircle, Download, Loader2, X } from "lucide-react";
+import {
+	MessageCircle,
+	Download,
+	Loader2,
+	X,
+	Plus,
+	MessageSquare,
+} from "lucide-react";
 import { useIntegrationContext } from "@/contexts/integration-context";
 import { SyncChatsDialog } from "@/components/sync-chats-dialog";
+import { useIntegrations } from "@integration-app/react";
+import { IntegrationsDialog } from "@/components/integrations-dialog";
+import { DeleteChatDialog } from "@/components/delete-chat-dialog";
 
 export default function MessagesPage() {
 	// Hooks
@@ -27,12 +37,45 @@ export default function MessagesPage() {
 		useSyncMessages();
 	const { selectedIntegration, setSelectedIntegration } =
 		useIntegrationContext();
+	const { integrations } = useIntegrations();
+
+	// Get connected integrations
+	const connectedIntegrations = integrations.filter(
+		(integration) => integration.connection
+	);
+
+	// Add a small delay to prevent flash of "no connections" state
+	const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+	useEffect(() => {
+		// Wait for integrations to load or timeout after 2 seconds
+		const timer = setTimeout(() => {
+			setHasInitiallyLoaded(true);
+		}, 2000);
+
+		// If we get integrations before timeout, mark as loaded immediately
+		if (integrations.length > 0) {
+			clearTimeout(timer);
+			setHasInitiallyLoaded(true);
+		}
+
+		return () => clearTimeout(timer);
+	}, [integrations.length]);
+
+	// Show loading state if we haven't initially loaded yet
+	const shouldShowLoading = !hasInitiallyLoaded;
 
 	// State
 	const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
-	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [chatSearchQuery, setChatSearchQuery] = useState("");
 	const [isSyncDialogOpen, setIsSyncDialogOpen] = useState(false);
+	const [isIntegrationsDialogOpen, setIsIntegrationsDialogOpen] =
+		useState(false);
+	const [isDeleteChatDialogOpen, setIsDeleteChatDialogOpen] = useState(false);
+	const [chatToDelete, setChatToDelete] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
 
 	// Stable callback for search
 	const handleSearchChange = useCallback((value: string) => {
@@ -119,17 +162,6 @@ export default function MessagesPage() {
 	);
 
 	// Event handlers
-	const handleRefresh = async () => {
-		try {
-			setIsRefreshing(true);
-			await Promise.all([mutateMessages(), refreshChats()]);
-		} catch (error) {
-			console.error("Failed to refresh messages and chats:", error);
-		} finally {
-			setIsRefreshing(false);
-		}
-	};
-
 	const handleSync = async () => {
 		console.log(
 			"🔍 handleSync called with selectedIntegration:",
@@ -282,6 +314,22 @@ export default function MessagesPage() {
 		]
 	);
 
+	const handleDeleteChat = useCallback((chatId: string, chatName: string) => {
+		setChatToDelete({ id: chatId, name: chatName });
+		setIsDeleteChatDialogOpen(true);
+	}, []);
+
+	const handleDeleteChatSuccess = useCallback(() => {
+		// Refresh chats and messages after deletion
+		refreshChats();
+		mutateMessages();
+		// Clear selected chat if it was the deleted one
+		if (chatToDelete && selectedChatId === chatToDelete.id) {
+			setSelectedChatId(undefined);
+		}
+		setChatToDelete(null);
+	}, [chatToDelete, selectedChatId, refreshChats, mutateMessages]);
+
 	// Filter messages by selected integration
 	const filteredMessages = useMemo(() => {
 		if (selectedIntegration) {
@@ -353,31 +401,27 @@ export default function MessagesPage() {
 						Error: {error}
 					</div>
 				)}
-				<Button
-					onClick={handleRefresh}
-					disabled={isRefreshing}
-					variant="outline"
-					className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
-				>
-					<RefreshCw
-						className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-					/>
-					{isRefreshing ? "Refreshing..." : "Refresh"}
-				</Button>
 			</div>
 		</div>
 	);
 
 	const ChatViewSection = () => (
 		<div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-			<ChatscopeChat
-				messages={filteredMessages}
-				selectedChatId={selectedChatId}
-				isLoading={messagesLoading}
-				onSendMessage={handleSendMessage}
-				onRetryMessage={handleRetryMessage}
-				selectedChatName={selectedChatName}
-			/>
+			<div className="flex items-center space-x-2 p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+				<MessageSquare className="h-5 w-5 text-gray-500" />
+				<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+					Messages
+				</h2>
+			</div>
+			<div className="flex-1 overflow-hidden">
+				<ChatscopeChat
+					messages={filteredMessages}
+					selectedChatId={selectedChatId}
+					isLoading={messagesLoading}
+					onSendMessage={handleSendMessage}
+					onRetryMessage={handleRetryMessage}
+				/>
+			</div>
 		</div>
 	);
 
@@ -432,24 +476,62 @@ export default function MessagesPage() {
 		<div className="flex h-[calc(100vh-40px)]">
 			<Sidebar />
 			<div className="flex-1 p-8">
-				<div className="flex flex-col gap-4">
-					<HeaderSection />
-
-					{/* Main Content */}
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-						<ChatListSection
-							chats={filteredChats}
-							selectedChatId={selectedChatId}
-							onChatSelect={setSelectedChatId}
-							isLoading={chatsLoading}
-							searchQuery={chatSearchQuery}
-							onSearchChange={handleSearchChange}
-						/>
-						<ChatViewSection />
+				{shouldShowLoading ? (
+					// Loading state
+					<div className="flex flex-col items-center justify-center h-full text-center">
+						<Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
+						<p className="text-lg text-muted-foreground">
+							Loading integrations and messages...
+						</p>
 					</div>
+				) : connectedIntegrations.length === 0 ? (
+					// No connections state
+					<div className="flex flex-col items-center justify-center h-full text-center">
+						<div className="max-w-md mx-auto">
+							<div className="w-24 h-24 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center mx-auto mb-6">
+								<Plus className="w-12 h-12 text-blue-600 dark:text-blue-300" />
+							</div>
+							<h1 className="text-3xl font-bold tracking-tight mb-4">
+								Connect Your First Integration
+							</h1>
+							<p className="text-lg text-muted-foreground mb-8">
+								Get started by connecting your messaging platforms to sync and
+								manage all your conversations in one place.
+							</p>
+							<Button
+								onClick={() => setIsIntegrationsDialogOpen(true)}
+								size="lg"
+								className="bg-blue-600 hover:bg-blue-700 text-white"
+							>
+								<Plus className="mr-2 h-5 w-5" />
+								Connect Integration
+							</Button>
+						</div>
+					</div>
+				) : (
+					// Normal content when integrations exist
+					<div className="flex flex-col gap-4">
+						<HeaderSection />
 
-					<StatsSection />
-				</div>
+						{/* Main Content */}
+						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+							<ChatListSection
+								chats={filteredChats}
+								selectedChatId={selectedChatId}
+								onChatSelect={setSelectedChatId}
+								onChatDelete={handleDeleteChat}
+								onSyncChats={handleSync}
+								isSyncing={isSyncing}
+								isLoading={chatsLoading}
+								searchQuery={chatSearchQuery}
+								onSearchChange={handleSearchChange}
+							/>
+							<ChatViewSection />
+						</div>
+
+						<StatsSection />
+					</div>
+				)}
 			</div>
 
 			{/* Sync Chats Dialog */}
@@ -464,6 +546,21 @@ export default function MessagesPage() {
 				}
 				integrationName={selectedIntegration?.name}
 				onSyncSelected={handleSyncSelectedChats}
+			/>
+
+			{/* Integrations Dialog */}
+			<IntegrationsDialog
+				open={isIntegrationsDialogOpen}
+				onOpenChange={setIsIntegrationsDialogOpen}
+			/>
+
+			{/* Delete Chat Dialog */}
+			<DeleteChatDialog
+				isOpen={isDeleteChatDialogOpen}
+				onClose={() => setIsDeleteChatDialogOpen(false)}
+				chatId={chatToDelete?.id || ""}
+				chatName={chatToDelete?.name || ""}
+				onDeleteSuccess={handleDeleteChatSuccess}
 			/>
 		</div>
 	);
