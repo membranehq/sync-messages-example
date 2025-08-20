@@ -420,7 +420,6 @@ export default function MessagesPage() {
 					isLoading={messagesLoading}
 					onSendMessage={handleSendMessage}
 					onRetryMessage={handleRetryMessage}
-					selectedChatName={selectedChatName}
 				/>
 			</div>
 		</div>
