@@ -40,7 +40,9 @@ export function ChatscopeChat({
 	};
 
 	// Filter messages for the selected chat
-	const chatMessages = messages.filter((msg) => msg.chatId === selectedChatId);
+	const chatMessages = selectedChatId
+		? messages.filter((msg) => msg.chatId === selectedChatId)
+		: [];
 
 	// Convert our messages to chatscope format
 	const chatscopeMessages = chatMessages.map((msg) => {
@@ -79,7 +81,7 @@ export function ChatscopeChat({
 
 	if (isLoading) {
 		return (
-			<div className="flex-1 flex items-center justify-center">
+			<div className="flex-1 flex items-center justify-center h-full">
 				<div className="text-center">
 					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
 					<p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -90,9 +92,13 @@ export function ChatscopeChat({
 		);
 	}
 
-	if (!selectedChatId) {
+	if (
+		!selectedChatId ||
+		selectedChatId === undefined ||
+		selectedChatId === ""
+	) {
 		return (
-			<div className="flex-1 flex items-center justify-center">
+			<div className="flex-1 flex items-center justify-center h-full">
 				<div className="text-center">
 					<MessagesSquare className="mx-auto h-12 w-12 text-gray-400" />
 					<h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -106,16 +112,16 @@ export function ChatscopeChat({
 		);
 	}
 
-	if (messages.length === 0) {
+	if (chatMessages.length === 0) {
 		return (
-			<div className="flex-1 flex items-center justify-center">
+			<div className="flex-1 flex items-center justify-center h-full">
 				<div className="text-center">
 					<MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
 					<h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-						No messages
+						No messages found in chat
 					</h3>
 					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-						No messages found in this chat.
+						This chat doesn't have any messages yet.
 					</p>
 				</div>
 			</div>
