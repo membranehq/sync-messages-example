@@ -3,15 +3,15 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --turbopack",
+		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint"
 	},
 	"dependencies": {
 		"@ark-ui/react": "^2.0.0",
-		"@chatscope/chat-ui-kit-react": "^1.10.1",
-		"@chatscope/chat-ui-kit-styles": "^1.0.0",
+		"@chatscope/chat-ui-kit-react": "^2.1.1",
+		"@chatscope/chat-ui-kit-styles": "^1.4.0",
 		"@integration-app/react": "^2.25.1",
 		"@integration-app/sdk": "^1.14.1",
 		"@radix-ui/react-checkbox": "^1.0.4",
