@@ -5,12 +5,11 @@ import {
 	MessageList,
 	Message as ChatscopeMessage,
 	MessageInput,
-	ConversationHeader,
 } from "@chatscope/chat-ui-kit-react";
 import { RefreshCw } from "lucide-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { useEffect, useRef } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, MessageSquare, MessagesSquare } from "lucide-react";
 import {
 	getMessageSenderName,
 	shouldShowSenderName,
@@ -95,7 +94,7 @@ export function ChatscopeChat({
 		return (
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center">
-					<MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
+					<MessagesSquare className="mx-auto h-12 w-12 text-gray-400" />
 					<h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
 						Select a chat
 					</h3>
@@ -133,17 +132,12 @@ export function ChatscopeChat({
 		<div style={{ position: "relative", height: "100%" }}>
 			<MainContainer style={{ border: "none", borderRadius: "0" }}>
 				<ChatContainer style={{ border: "none", borderRadius: "0" }}>
-					<ConversationHeader>
-						<ConversationHeader.Content>
-							<div className="ml-3">
-								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-									{selectedChatName || "Chat"}
-								</div>
-							</div>
-						</ConversationHeader.Content>
-					</ConversationHeader>
 					<MessageList
-						style={{ maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
+						style={{
+							maxHeight: "calc(100vh - 200px)",
+							overflowY: "auto",
+							paddingBottom: "5px",
+						}}
 					>
 						{chatscopeMessages.map((msg, index) => {
 							// Find the original message to get the ID for retry

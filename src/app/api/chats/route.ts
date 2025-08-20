@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Chat } from "@/models/chat";
+import { Message } from "@/models/message";
 import { getAuthFromRequest } from "@/lib/server-auth";
 
 export async function GET(request: NextRequest) {
@@ -34,6 +35,53 @@ export async function GET(request: NextRequest) {
 		console.error("Error fetching chats:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch chats" },
+			{ status: 500 }
+		);
+	}
+}
+
+export async function DELETE(request: NextRequest) {
+	try {
+		const auth = getAuthFromRequest(request);
+		if (!auth.customerId) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		const { chatId } = await request.json();
+		if (!chatId) {
+			return NextResponse.json(
+				{ error: "Chat ID is required" },
+				{ status: 400 }
+			);
+		}
+
+		await connectDB();
+
+		// First, delete all messages associated with this chat
+		const deleteMessagesResult = await Message.deleteMany({
+			chatId: chatId,
+			$or: [{ customerId: auth.customerId }, { customerId: "default" }],
+		});
+
+		// Then delete the chat
+		const deleteChatResult = await Chat.deleteOne({
+			id: chatId,
+			$or: [{ customerId: auth.customerId }, { customerId: "default" }],
+		});
+
+		if (deleteChatResult.deletedCount === 0) {
+			return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+		}
+
+		return NextResponse.json({
+			success: true,
+			deletedChat: deleteChatResult.deletedCount,
+			deletedMessages: deleteMessagesResult.deletedCount,
+		});
+	} catch (error) {
+		console.error("Error deleting chat:", error);
+		return NextResponse.json(
+			{ error: "Failed to delete chat" },
 			{ status: 500 }
 		);
 	}
