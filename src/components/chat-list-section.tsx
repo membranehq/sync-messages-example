@@ -1,34 +1,38 @@
-import { Chat } from "@/types/message";
-import { MessageCircle } from "lucide-react";
-import { memo } from "react";
 import { ChatList } from "./chat-list";
 import { ChatSearch } from "./chat-search";
+import type { Chat } from "@/types/message";
+import { MessageCircle } from "lucide-react";
 
 interface ChatListSectionProps {
 	chats: Chat[];
-	selectedChatId?: string;
+	selectedChatId: string | null;
 	onChatSelect: (chatId: string) => void;
 	onChatDelete?: (chatId: string, chatName: string) => void;
 	onSyncChats?: () => void;
 	isSyncing?: boolean;
-	isLoading: boolean;
-	searchQuery: string;
-	onSearchChange: (value: string) => void;
+	isLoading?: boolean;
+	searchQuery?: string;
+	onSearchChange?: (value: string) => void;
+	selectedIntegrationKey?: string | undefined;
+	isDisabled?: boolean;
 }
 
-export const ChatListSection = memo(function ChatListSection({
+export function ChatListSection({
 	chats,
 	selectedChatId,
 	onChatSelect,
 	onChatDelete,
 	onSyncChats,
-	isSyncing,
-	isLoading,
-	searchQuery,
+	isSyncing = false,
+	isLoading = false,
+	searchQuery = "",
 	onSearchChange,
+	selectedIntegrationKey,
+	isDisabled = false,
 }: ChatListSectionProps) {
 	return (
-		<div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full min-h-0">
+		<div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full min-h-0">
+			{/* Header */}
 			<div className="flex items-center space-x-2 p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
 				<MessageCircle className="h-5 w-5 text-gray-500" />
 				<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -36,9 +40,15 @@ export const ChatListSection = memo(function ChatListSection({
 				</h2>
 			</div>
 
-			{/* Search input */}
-			<ChatSearch value={searchQuery} onChange={onSearchChange} />
+			{/* Search */}
+			<div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+				<ChatSearch
+					value={searchQuery}
+					onChange={onSearchChange || (() => {})}
+				/>
+			</div>
 
+			{/* Chat List */}
 			<div className="flex-1 overflow-y-auto p-4 min-h-0">
 				<ChatList
 					chats={chats}
@@ -49,8 +59,10 @@ export const ChatListSection = memo(function ChatListSection({
 					isSyncing={isSyncing}
 					isLoading={isLoading}
 					searchQuery={searchQuery}
+					selectedIntegrationKey={selectedIntegrationKey}
+					isDisabled={isDisabled}
 				/>
 			</div>
 		</div>
 	);
-});
+}

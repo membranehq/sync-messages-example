@@ -110,23 +110,31 @@ export async function POST(request: NextRequest) {
 				await UserPlatform.findOneAndUpdate(
 					{
 						customerId: auth.customerId,
-						platformId: connection.id,
+						platformId:
+							connection.integration?.key || connection.name.toLowerCase(),
 					},
 					{
 						customerId: auth.customerId, // Our internal customer ID
-						platformId: connection.id,
+						platformId:
+							connection.integration?.key || connection.name.toLowerCase(),
 						platformName: platformName, // Use platform name from response
 						externalUserId, // External platform's user ID (e.g., "U0976R40534" for Slack)
 						externalUserName,
 						externalUserEmail,
 						connectionId: connection.id,
+						importNew: true, // Explicitly set importNew to true for new connections
 						lastSynced: new Date(),
 					},
-					{ upsert: true, new: true }
+					{
+						upsert: true,
+						new: true,
+						setDefaultsOnInsert: true, // Ensure defaults are set on new documents
+					}
 				);
 
 				results.push({
-					platformId: connection.id,
+					platformId:
+						connection.integration?.key || connection.name.toLowerCase(),
 					platformName: platformName, // Use platform name from response
 					externalUserId,
 					externalUserName,
@@ -154,7 +162,8 @@ export async function POST(request: NextRequest) {
 				}
 
 				results.push({
-					platformId: connection.id,
+					platformId:
+						connection.integration?.key || connection.name.toLowerCase(),
 					platformName: connection.name,
 					success: false,
 					error: errorMessage,

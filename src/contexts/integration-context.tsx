@@ -8,6 +8,12 @@ interface IntegrationContextType {
 	setSelectedIntegration: (
 		integration: IntegrationAppIntegration | null
 	) => void;
+	exportSupportMap: Record<string, boolean>;
+	setExportSupportMap: (
+		map:
+			| Record<string, boolean>
+			| ((prev: Record<string, boolean>) => Record<string, boolean>)
+	) => void;
 }
 
 const IntegrationContext = createContext<IntegrationContextType | undefined>(
@@ -17,10 +23,18 @@ const IntegrationContext = createContext<IntegrationContextType | undefined>(
 export function IntegrationProvider({ children }: { children: ReactNode }) {
 	const [selectedIntegration, setSelectedIntegration] =
 		useState<IntegrationAppIntegration | null>(null);
+	const [exportSupportMap, setExportSupportMap] = useState<
+		Record<string, boolean>
+	>({});
 
 	return (
 		<IntegrationContext.Provider
-			value={{ selectedIntegration, setSelectedIntegration }}
+			value={{
+				selectedIntegration,
+				setSelectedIntegration,
+				exportSupportMap,
+				setExportSupportMap,
+			}}
 		>
 			{children}
 		</IntegrationContext.Provider>

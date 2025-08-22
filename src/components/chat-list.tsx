@@ -1,18 +1,21 @@
-import { Chat } from "@/types/message";
-import { formatDistanceToNow } from "date-fns";
-import { MessageCircle, Users, Trash2, Download, Loader2 } from "lucide-react";
 import { memo } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { MessageCircle, Users, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SyncButton } from "@/components/sync-button";
+import type { Chat } from "@/types/message";
 
 interface ChatListProps {
 	chats: Chat[];
-	selectedChatId?: string;
+	selectedChatId: string | null;
 	onChatSelect: (chatId: string) => void;
 	onChatDelete?: (chatId: string, chatName: string) => void;
 	onSyncChats?: () => void;
 	isSyncing?: boolean;
 	isLoading?: boolean;
 	searchQuery?: string;
+	selectedIntegrationKey?: string | undefined;
+	isDisabled?: boolean;
 }
 
 export const ChatList = memo(function ChatList({
@@ -21,18 +24,19 @@ export const ChatList = memo(function ChatList({
 	onChatSelect,
 	onChatDelete,
 	onSyncChats,
-	isSyncing,
-	isLoading,
-	searchQuery,
+	isSyncing = false,
+	isLoading = false,
+	searchQuery = "",
+	selectedIntegrationKey,
+	isDisabled,
 }: ChatListProps) {
 	if (isLoading) {
 		return (
-			<div className="space-y-2">
-				{[...Array(5)].map((_, i) => (
-					<div key={i} className="animate-pulse">
-						<div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-					</div>
-				))}
+			<div className="text-center py-8">
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+				<p className="text-sm text-gray-500 dark:text-gray-400">
+					Loading chats...
+				</p>
 			</div>
 		);
 	}
@@ -49,25 +53,13 @@ export const ChatList = memo(function ChatList({
 						? "Try adjusting your search terms or clear the search."
 						: "Import chats from your connected messaging platforms to see them here."}
 				</p>
-				{!searchQuery && onSyncChats && (
-					<Button
-						onClick={onSyncChats}
-						disabled={isSyncing}
-						variant="outline"
-						className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
-					>
-						{isSyncing ? (
-							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Importing...
-							</>
-						) : (
-							<>
-								<Download className="mr-2 h-4 w-4" />
-								Import Chats
-							</>
-						)}
-					</Button>
+				{!searchQuery && onSyncChats && selectedIntegrationKey && (
+					<SyncButton
+						integrationKey={selectedIntegrationKey}
+						onSync={onSyncChats}
+						isSyncing={isSyncing}
+						isDisabled={isDisabled}
+					/>
 				)}
 			</div>
 		);

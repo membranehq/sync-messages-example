@@ -334,7 +334,9 @@ export async function POST(request: NextRequest) {
 										// by comparing the sender with our stored external user IDs
 										const userPlatform = await UserPlatform.findOne({
 											customerId: auth.customerId,
-											platformId: connection.id,
+											platformId:
+												connection.integration?.key ||
+												connection.name.toLowerCase(),
 											externalUserId: sender,
 										});
 

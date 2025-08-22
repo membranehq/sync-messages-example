@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Message } from "@/models/message";
 import { Chat } from "@/models/chat";
+import { UserPlatform } from "@/models/user-platform";
 
 interface IncomingMessagePayload {
 	externalMessageId: string;
@@ -59,6 +60,14 @@ export async function POST(request: NextRequest) {
 			integrationId = "unknown",
 		} = data;
 
+		// Use the provided integrationId or fallback to platformName
+		let actualIntegrationId =
+			integrationId !== "unknown" ? integrationId : platformName.toLowerCase();
+
+		console.log(
+			`🔍 Using integration ID: ${actualIntegrationId} for platform: ${platformName}`
+		);
+
 		// Generate a unique message ID if not provided
 		const messageId = id || `msg-${Date.now()}-${Math.random()}`;
 
@@ -99,18 +108,42 @@ export async function POST(request: NextRequest) {
 		// Find or create the chat
 		let chat = await Chat.findOne({ id: chatId, customerId });
 		if (!chat) {
-			// Create a new chat if it doesn't exist
+			// Check if this platform has importNew enabled
+			const userPlatform = await UserPlatform.findOne({
+				platformId: actualIntegrationId, // Use the standardized platformId
+				customerId: customerId,
+			});
+
+			// Default to true if no UserPlatform record exists (new connection)
+			// Only false if explicitly set to false
+			const importNewEnabled = userPlatform ? userPlatform.importNew : true;
+
+			if (!importNewEnabled) {
+				console.log(
+					`❌ Chat ${chatId} not found and importNew is disabled for platform ${actualIntegrationId}`
+				);
+				return NextResponse.json(
+					{
+						success: false,
+						message: "Chat not found and automatic import is disabled",
+					},
+					{ status: 404 }
+				);
+			}
+
+			// Create a new chat if importNew is enabled
 			chat = await Chat.create({
 				id: chatId,
 				name: `Chat ${chatId}`,
 				platformName: platformName,
-				integrationId: integrationId,
+				integrationId: actualIntegrationId,
 				lastMessage: content,
 				lastMessageTime: formattedTimestamp,
 				participants: [ownerId],
 				customerId,
+				importNew: true, // Set importNew to true for new chats
 			});
-			console.log(`Created new chat: ${chatId}`);
+			console.log(`✅ Created new chat with importNew enabled: ${chatId}`);
 		} else {
 			// Update chat with latest message info
 			await Chat.findOneAndUpdate(
@@ -131,7 +164,7 @@ export async function POST(request: NextRequest) {
 			ownerName: ownerName,
 			timestamp: formattedTimestamp,
 			chatId: chatId,
-			integrationId: integrationId,
+			integrationId: actualIntegrationId,
 			platformName: platformName,
 			messageType: "third-party", // Mark as incoming message
 			externalMessageId: externalMessageId,

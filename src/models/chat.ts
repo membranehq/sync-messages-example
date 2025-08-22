@@ -9,6 +9,7 @@ export interface IChat extends Document {
 	integrationId: string;
 	platformName?: string;
 	customerId: string;
+	importNew?: boolean; // Whether to automatically import new messages from this integration
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -23,6 +24,7 @@ const ChatSchema = new Schema<IChat>(
 		integrationId: { type: String, required: true },
 		platformName: { type: String },
 		customerId: { type: String, required: true },
+		importNew: { type: Boolean, default: false }, // Default to false
 	},
 	{
 		timestamps: true,
