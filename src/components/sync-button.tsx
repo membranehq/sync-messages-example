@@ -34,8 +34,8 @@ export function SyncButton({
 
 	// Determine button text
 	const getButtonText = () => {
-		if (buttonText) return buttonText;
 		if (isSyncing) return `Syncing... (${status || ""})`;
+		if (buttonText) return buttonText;
 		if (integrationName) return `Sync ${integrationName}`;
 		return "Sync Messages";
 	};

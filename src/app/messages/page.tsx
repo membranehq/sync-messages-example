@@ -619,6 +619,7 @@ export default function MessagesPage() {
 								searchQuery={chatSearchQuery}
 								onSearchChange={handleSearchChange}
 								selectedIntegrationKey={selectedIntegration?.key}
+								status={status}
 								isDisabled={
 									selectedIntegration?.key
 										? exportSupportMap[selectedIntegration.key] === false

@@ -15,6 +15,7 @@ interface ChatListSectionProps {
 	onSearchChange?: (value: string) => void;
 	selectedIntegrationKey?: string | undefined;
 	isDisabled?: boolean;
+	status?: string;
 }
 
 export function ChatListSection({
@@ -29,6 +30,7 @@ export function ChatListSection({
 	onSearchChange,
 	selectedIntegrationKey,
 	isDisabled = false,
+	status,
 }: ChatListSectionProps) {
 	return (
 		<div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full min-h-0">
@@ -61,6 +63,7 @@ export function ChatListSection({
 					searchQuery={searchQuery}
 					selectedIntegrationKey={selectedIntegrationKey}
 					isDisabled={isDisabled}
+					status={status}
 				/>
 			</div>
 		</div>

@@ -16,6 +16,7 @@ interface ChatListProps {
 	searchQuery?: string;
 	selectedIntegrationKey?: string | undefined;
 	isDisabled?: boolean;
+	status?: string;
 }
 
 export const ChatList = memo(function ChatList({
@@ -29,6 +30,7 @@ export const ChatList = memo(function ChatList({
 	searchQuery = "",
 	selectedIntegrationKey,
 	isDisabled,
+	status,
 }: ChatListProps) {
 	if (isLoading) {
 		return (
@@ -57,6 +59,7 @@ export const ChatList = memo(function ChatList({
 					<SyncButton
 						integrationKey={selectedIntegrationKey}
 						onSync={onSyncChats}
+						status={status}
 						isSyncing={isSyncing}
 						isDisabled={isDisabled}
 					/>
