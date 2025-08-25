@@ -56,6 +56,9 @@ export function useSyncMessages() {
 	) => {
 		try {
 			console.log("🔄 Starting sync...");
+			console.log("🔍 syncMessages called with:");
+			console.log("🔍 integrationId:", integrationId);
+			console.log("🔍 selectedChatIds:", selectedChatIds);
 
 			// Step 1: Create sync status on server
 			const createResponse = await fetch("/api/sync-status", {
@@ -83,20 +86,30 @@ export function useSyncMessages() {
 			}));
 
 			// Step 2: Execute the actual sync
+			const requestBody = {
+				syncId,
+				integrationId, // Pass the integration ID if provided
+				selectedChatIds, // Pass the selected chat IDs if provided
+			};
+
+			console.log("🔍 Sending request body to sync API:", requestBody);
+
 			const syncResponse = await fetch("/api/messages/sync", {
 				method: "POST",
 				headers: {
 					...getAuthHeaders(),
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({
-					syncId,
-					integrationId, // Pass the integration ID if provided
-					selectedChatIds, // Pass the selected chat IDs if provided
-				}),
+				body: JSON.stringify(requestBody),
 			});
 
 			if (!syncResponse.ok) {
+				console.error(
+					"🔍 Sync API returned error status:",
+					syncResponse.status
+				);
+				const errorText = await syncResponse.text();
+				console.error("🔍 Sync API error response:", errorText);
 				throw new Error("Failed to sync messages");
 			}
 

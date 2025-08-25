@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Message } from "@/models/message";
 import { Chat } from "@/models/chat";
+import { UserPlatform } from "@/models/user-platform";
+import { getIntegrationClient } from "@/lib/integration-app-client";
+import type { AuthCustomer } from "@/lib/auth";
 
 interface IncomingMessagePayload {
 	externalMessageId: string;
@@ -16,6 +19,67 @@ interface IncomingMessagePayload {
 		platformName?: string;
 		integrationId?: string;
 	};
+}
+
+interface ChatRecord {
+	id?: string;
+	name?: string;
+	title?: string;
+	subject?: string;
+	fields?: {
+		id?: string;
+		name?: string;
+	};
+	rawFields?: {
+		id?: string;
+		name?: string;
+	};
+}
+
+// Function to get chat name from available chats
+async function getChatName(
+	chatId: string,
+	integrationId: string,
+	auth: AuthCustomer
+): Promise<string> {
+	try {
+		const client = await getIntegrationClient(auth);
+
+		// Get available chats from the integration
+		const chatsResult = await client
+			.connection(integrationId)
+			.action("get-chats")
+			.run({
+				cursor: "", // Start from beginning
+			});
+
+		if (chatsResult.output?.records) {
+			const chat = chatsResult.output.records.find(
+				(chat: ChatRecord) =>
+					chat.id === chatId ||
+					chat.fields?.id === chatId ||
+					chat.rawFields?.id === chatId
+			);
+
+			if (chat) {
+				const chatName =
+					chat.fields?.name ||
+					chat.rawFields?.name ||
+					chat.name ||
+					chat.title ||
+					chat.subject ||
+					"Unnamed Chat";
+
+				console.log(`✅ Found chat name for ${chatId}: ${chatName}`);
+				return chatName;
+			}
+		}
+	} catch (error) {
+		console.error(`❌ Error fetching chat name for ${chatId}:`, error);
+	}
+
+	// Fallback to generic name if we can't fetch the real name
+	return `Chat ${chatId}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -48,16 +112,36 @@ export async function POST(request: NextRequest) {
 		await connectDB();
 
 		// Extract data from the payload
-		const {
-			id,
-			content,
-			ownerId,
-			ownerName,
-			chatId,
-			timestamp,
-			platformName = "Unknown",
-			integrationId = "unknown",
-		} = data;
+		const { id, content, ownerId, ownerName, chatId, timestamp, platformName } =
+			data;
+
+		// Ensure platformName has a value
+		const actualPlatformName = platformName || "Unknown";
+
+		// Look up the integration information from UserPlatform using customerId and platformName
+		const userPlatform = await UserPlatform.findOne({
+			customerId: customerId,
+			platformName: actualPlatformName,
+		});
+
+		// Use the connectionId from UserPlatform as the integrationId
+		let actualIntegrationId = "unknown";
+		if (userPlatform) {
+			actualIntegrationId = userPlatform.connectionId;
+			console.log(
+				`✅ Found UserPlatform record for ${actualPlatformName}: connectionId = ${actualIntegrationId}`
+			);
+		} else {
+			console.log(
+				`⚠️ No UserPlatform record found for customerId: ${customerId}, platformName: ${actualPlatformName}`
+			);
+			// Fallback to platformName.toLowerCase() if no UserPlatform record exists
+			actualIntegrationId = actualPlatformName.toLowerCase();
+		}
+
+		console.log(
+			`🔍 Using integration ID: ${actualIntegrationId} for platform: ${actualPlatformName}`
+		);
 
 		// Generate a unique message ID if not provided
 		const messageId = id || `msg-${Date.now()}-${Math.random()}`;
@@ -81,46 +165,110 @@ export async function POST(request: NextRequest) {
 		console.log(`Raw timestamp: ${timestamp}`);
 		console.log(`Formatted timestamp: ${formattedTimestamp}`);
 
-		// Check if we already have this message by externalMessageId
+		// Check if we already have this message by externalMessageId and customerId
 		const existingMessage = await Message.findOne({
 			externalMessageId: externalMessageId,
+			customerId: customerId,
 		});
 
 		if (existingMessage) {
 			console.log(
-				`Message with externalMessageId ${externalMessageId} already exists, skipping import`
+				`Message with externalMessageId ${externalMessageId} already exists for customer ${customerId}, skipping import`
 			);
 			return NextResponse.json({
 				success: true,
-				message: "Message already exists",
+				message: "Message already exists for this customer",
 			});
 		}
 
 		// Find or create the chat
 		let chat = await Chat.findOne({ id: chatId, customerId });
 		if (!chat) {
-			// Create a new chat if it doesn't exist
+			// Use the userPlatform we already found above, or do a fallback lookup
+			let importNewEnabled = true; // Default to true
+
+			if (userPlatform) {
+				importNewEnabled = userPlatform.importNew;
+			} else {
+				// Fallback lookup using platformName
+				const fallbackUserPlatform = await UserPlatform.findOne({
+					platformId: actualPlatformName.toLowerCase(),
+					customerId: customerId,
+				});
+				importNewEnabled = fallbackUserPlatform
+					? fallbackUserPlatform.importNew
+					: true;
+			}
+
+			if (!importNewEnabled) {
+				console.log(
+					`❌ Chat ${chatId} not found and importNew is disabled for platform ${actualPlatformName}`
+				);
+				return NextResponse.json(
+					{
+						success: false,
+						message: "Chat not found and automatic import is disabled",
+					},
+					{ status: 404 }
+				);
+			}
+
+			// Get the actual chat name from the integration
+			const chatName = await getChatName(chatId, actualIntegrationId, {
+				customerId,
+				customerName: null,
+			});
+
+			// Create a new chat if importNew is enabled
 			chat = await Chat.create({
 				id: chatId,
-				name: `Chat ${chatId}`,
-				platformName: platformName,
-				integrationId: integrationId,
+				name: chatName,
+				platformName: actualPlatformName,
+				integrationId: actualIntegrationId,
 				lastMessage: content,
 				lastMessageTime: formattedTimestamp,
 				participants: [ownerId],
 				customerId,
+				importNew: true, // Set importNew to true for new chats
 			});
-			console.log(`Created new chat: ${chatId}`);
-		} else {
-			// Update chat with latest message info
-			await Chat.findOneAndUpdate(
-				{ id: chatId, customerId },
-				{
-					lastMessage: content,
-					lastMessageTime: formattedTimestamp,
-					updatedAt: new Date(),
-				}
+			console.log(
+				`✅ Created new chat with importNew enabled: ${chatId} (${chatName})`
 			);
+		} else {
+			// Update chat with latest message info and fix integrationId if needed
+			const updateData: {
+				lastMessage: string;
+				lastMessageTime: string;
+				updatedAt: Date;
+				integrationId?: string;
+				platformName?: string;
+				name?: string;
+			} = {
+				lastMessage: content,
+				lastMessageTime: formattedTimestamp,
+				updatedAt: new Date(),
+			};
+
+			// Fix integrationId if it's "unknown" or doesn't match
+			if (
+				chat.integrationId === "unknown" ||
+				chat.integrationId !== actualIntegrationId
+			) {
+				console.log(
+					`🔧 Fixing chat integrationId from "${chat.integrationId}" to "${actualIntegrationId}"`
+				);
+				updateData.integrationId = actualIntegrationId;
+				updateData.platformName = actualPlatformName;
+
+				// Also update the chat name if we're fixing the integration
+				const chatName = await getChatName(chatId, actualIntegrationId, {
+					customerId,
+					customerName: null,
+				});
+				updateData.name = chatName;
+			}
+
+			await Chat.findOneAndUpdate({ id: chatId, customerId }, updateData);
 		}
 
 		// Save the incoming message to MongoDB
@@ -131,8 +279,8 @@ export async function POST(request: NextRequest) {
 			ownerName: ownerName,
 			timestamp: formattedTimestamp,
 			chatId: chatId,
-			integrationId: integrationId,
-			platformName: platformName,
+			integrationId: actualIntegrationId,
+			platformName: actualPlatformName,
 			messageType: "third-party", // Mark as incoming message
 			externalMessageId: externalMessageId,
 			status: "sent", // Incoming messages are already sent on the external platform

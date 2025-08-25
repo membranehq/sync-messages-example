@@ -50,12 +50,30 @@ export async function POST(request: NextRequest) {
 		const connectionsResponse = await client.connections.find();
 		let connections = connectionsResponse.items || [];
 
+		console.log(
+			`🔍 Available connections:`,
+			connections.map((c) => ({
+				id: c.id,
+				name: c.name,
+				integrationKey: c.integration?.key,
+			}))
+		);
+		console.log(`🔍 Requested integrationId:`, integrationId);
+
 		// Filter by integration ID if provided
 		if (integrationId) {
 			connections = connections.filter(
 				(connection) => connection.id === integrationId
 			);
 			console.log(`🔍 Filtering sync to integration: ${integrationId}`);
+			console.log(
+				`🔍 Filtered connections:`,
+				connections.map((c) => ({
+					id: c.id,
+					name: c.name,
+					integrationKey: c.integration?.key,
+				}))
+			);
 		}
 
 		if (connections.length === 0) {
@@ -334,7 +352,9 @@ export async function POST(request: NextRequest) {
 										// by comparing the sender with our stored external user IDs
 										const userPlatform = await UserPlatform.findOne({
 											customerId: auth.customerId,
-											platformId: connection.id,
+											platformId:
+												connection.integration?.key ||
+												connection.name.toLowerCase(),
 											externalUserId: sender,
 										});
 

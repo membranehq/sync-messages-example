@@ -8,6 +8,7 @@ export interface IUserPlatform extends Document {
 	externalUserName?: string; // Username/display name from the external platform
 	externalUserEmail?: string; // Email from the external platform
 	connectionId: string; // Integration.app connection ID
+	importNew?: boolean; // Whether to automatically import new messages from this platform
 	lastSynced: Date;
 	createdAt: Date;
 	updatedAt: Date;
@@ -22,6 +23,7 @@ const UserPlatformSchema = new Schema<IUserPlatform>(
 		externalUserName: { type: String },
 		externalUserEmail: { type: String },
 		connectionId: { type: String, required: true },
+		importNew: { type: Boolean, default: true }, // Default to true for new connections
 		lastSynced: { type: Date, default: Date.now },
 	},
 	{

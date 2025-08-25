@@ -1,20 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useIntegrations, useIntegrationApp } from "@integration-app/react";
-import { Plus, Settings, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import type { Integration } from "@integration-app/sdk";
 import { Button } from "@/components/ui/button";
 import { IntegrationsDialog } from "@/components/integrations-dialog";
+import { Settings, Plus, Sun, Moon } from "lucide-react";
 import { useIntegrationContext } from "@/contexts/integration-context";
+import { checkIntegrationSupportsChatExport } from "@/lib/integration-app-client";
+import { useTheme } from "next-themes";
 
 export function Sidebar() {
 	const { integrations } = useIntegrations();
 	const integrationApp = useIntegrationApp();
 	const { theme, setTheme } = useTheme();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const { selectedIntegration, setSelectedIntegration } =
-		useIntegrationContext();
+	const {
+		selectedIntegration,
+		setSelectedIntegration,
+		exportSupportMap,
+		setExportSupportMap,
+	} = useIntegrationContext();
+
+	// Check export support when an integration is selected
+	const handleIntegrationSelect = useCallback(
+		async (integration: Integration) => {
+			console.log("🔍 Integration selected:", integration.key);
+			setSelectedIntegration(integration);
+
+			// Check if we already know the export support for this integration
+			if (exportSupportMap.hasOwnProperty(integration.key)) {
+				console.log(
+					"🔍 Using cached export support for",
+					integration.key,
+					":",
+					exportSupportMap[integration.key]
+				);
+				return;
+			}
+
+			// Make API request to check export support
+			try {
+				console.log("🔍 Checking export support for:", integration.key);
+				const supportsExport = await checkIntegrationSupportsChatExport(
+					integration.key
+				);
+				console.log(
+					"🔍 Export support result for",
+					integration.key,
+					":",
+					supportsExport
+				);
+
+				setExportSupportMap((prev) => ({
+					...prev,
+					[integration.key]: supportsExport,
+				}));
+
+				// Note: importNew setting is managed through the sync dialog UI
+				// We don't need to set it here when selecting an integration
+			} catch (error) {
+				console.error("Error checking export support:", error);
+				setExportSupportMap((prev) => ({
+					...prev,
+					[integration.key]: false,
+				}));
+
+				// If there's an error, assume it doesn't support export
+				// importNew will still be enabled by default in the UserPlatform model
+			}
+		},
+		[setSelectedIntegration, exportSupportMap, setExportSupportMap]
+	);
 
 	// Get connected and unconnected integrations
 	const connectedIntegrations = integrations.filter(
@@ -45,7 +102,7 @@ export function Sidebar() {
 							title={integration.name}
 						>
 							<div
-								onClick={() => setSelectedIntegration(integration)}
+								onClick={() => handleIntegrationSelect(integration)}
 								className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
 									isSelected
 										? "bg-blue-100 dark:bg-blue-800 border-2 border-blue-500"

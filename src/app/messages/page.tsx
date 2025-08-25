@@ -1,29 +1,48 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useMessages } from "@/hooks/use-messages";
 import { useChats } from "@/hooks/use-chats";
+import { useMessages } from "@/hooks/use-messages";
 import { useSyncMessages } from "@/hooks/use-sync-messages";
-import { Message } from "@/types/message";
-import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
-import { ensureAuth } from "@/lib/auth";
-import { ChatscopeChat } from "@/components/chatscope-chat";
-import { ChatListSection } from "@/components/chat-list-section";
-import { Sidebar } from "@/components/sidebar";
-import { Button } from "@/components/ui/button";
-import {
-	MessageCircle,
-	Download,
-	Loader2,
-	X,
-	Plus,
-	MessageSquare,
-} from "lucide-react";
 import { useIntegrationContext } from "@/contexts/integration-context";
-import { SyncChatsDialog } from "@/components/sync-chats-dialog";
 import { useIntegrations } from "@integration-app/react";
+import { Sidebar } from "@/components/sidebar";
+import { ChatListSection } from "@/components/chat-list-section";
+import { ChatscopeChat } from "@/components/chatscope-chat";
+import { SyncChatsDialog } from "@/components/sync-chats-dialog";
 import { IntegrationsDialog } from "@/components/integrations-dialog";
 import { DeleteChatDialog } from "@/components/delete-chat-dialog";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Loader2, Plus, X, MessageCircle } from "lucide-react";
+import type { Message } from "@/types/message";
+import { ensureAuth } from "@/lib/auth";
+import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
+import { SyncButton } from "@/components/sync-button";
+
+// Define ConnectedApp type to match the sync dialog
+interface ConnectedApp {
+	key: string;
+	name: string;
+	logoUri?: string;
+	connection?: {
+		id: string;
+	};
+	integration?: {
+		key: string;
+	};
+}
+
+// Define Integration type to match the integration context
+interface Integration {
+	key: string;
+	name: string;
+	connection?: {
+		id: string;
+	};
+	integration?: {
+		key: string;
+	};
+}
 
 export default function MessagesPage() {
 	// Hooks
@@ -35,9 +54,16 @@ export default function MessagesPage() {
 	const { chats, isLoading: chatsLoading, mutate: refreshChats } = useChats();
 	const { syncMessages, isSyncing, lastSyncTime, status, error } =
 		useSyncMessages();
-	const { selectedIntegration, setSelectedIntegration } =
-		useIntegrationContext();
 	const { integrations } = useIntegrations();
+	const { selectedIntegration, setSelectedIntegration, exportSupportMap } =
+		useIntegrationContext();
+	const [isIntegrationsDialogOpen, setIsIntegrationsDialogOpen] =
+		useState(false);
+	const [isDeleteChatDialogOpen, setIsDeleteChatDialogOpen] = useState(false);
+	const [chatToDelete, setChatToDelete] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
 
 	// Get connected integrations
 	const connectedIntegrations = integrations.filter(
@@ -69,13 +95,6 @@ export default function MessagesPage() {
 	const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
 	const [chatSearchQuery, setChatSearchQuery] = useState("");
 	const [isSyncDialogOpen, setIsSyncDialogOpen] = useState(false);
-	const [isIntegrationsDialogOpen, setIsIntegrationsDialogOpen] =
-		useState(false);
-	const [isDeleteChatDialogOpen, setIsDeleteChatDialogOpen] = useState(false);
-	const [chatToDelete, setChatToDelete] = useState<{
-		id: string;
-		name: string;
-	} | null>(null);
 
 	// Stable callback for search
 	const handleSearchChange = useCallback((value: string) => {
@@ -161,6 +180,23 @@ export default function MessagesPage() {
 		[updateMessageStatus, mutateMessages]
 	);
 
+	// Helper function to get standardized platformId
+	const getStandardizedPlatformId = (
+		integration: ConnectedApp | Integration
+	): string => {
+		console.log("🔍 getStandardizedPlatformId input:", integration);
+
+		// Try to get the integration key from various possible locations
+		const platformId =
+			integration.integration?.key ||
+			integration.key ||
+			integration.name?.toLowerCase() ||
+			"unknown";
+
+		console.log("🔍 getStandardizedPlatformId result:", platformId);
+		return platformId;
+	};
+
 	// Event handlers
 	const handleSync = async () => {
 		console.log(
@@ -172,23 +208,83 @@ export default function MessagesPage() {
 			selectedIntegration?.connection?.id
 		);
 		console.log("🔍 selectedIntegration?.key:", selectedIntegration?.key);
+		console.log(
+			"🔍 Current sync status - isSyncing:",
+			isSyncing,
+			"status:",
+			status
+		);
 
 		// Always open the sync dialog - it will handle app selection if needed
 		console.log("📱 Opening sync dialog");
 		setIsSyncDialogOpen(true);
 	};
 
-	const handleSyncSelectedChats = async (selectedChatIds: string[]) => {
+	const handleSyncSelectedChats = async (
+		selectedChatIds: string[],
+		importNew: boolean,
+		selectedApp?: ConnectedApp
+	) => {
+		console.log("🔍 handleSyncSelectedChats called with:");
+		console.log("🔍 selectedChatIds:", selectedChatIds);
+		console.log("🔍 importNew:", importNew);
+		console.log("🔍 selectedApp:", selectedApp);
+		console.log("🔍 selectedIntegration:", selectedIntegration);
+
+		// Use selectedApp from dialog if provided, otherwise fall back to global selectedIntegration
+		const integration = selectedApp || selectedIntegration;
+
+		console.log("🔍 Final integration object:", integration);
+
+		if (!integration) {
+			console.error("No integration selected for sync");
+			return;
+		}
+
+		console.log("🔍 Integration object:", integration);
+		console.log("🔍 Integration key:", integration.key);
+		console.log("🔍 Integration connection:", integration.connection);
+
+		// Use the standardized platformId (integration key) for UserPlatform operations
+		const platformId = getStandardizedPlatformId(integration);
+
+		// Use the connection ID for sync operations (this is what the sync API expects)
+		const connectionId = integration.connection?.id || integration.key;
+
+		console.log("🔍 Using platformId:", platformId);
+		console.log("🔍 Using connectionId:", connectionId);
+
+		if (!connectionId) {
+			console.error("No integration connection ID found");
+			console.error(
+				"Integration object:",
+				JSON.stringify(integration, null, 2)
+			);
+			return;
+		}
+
 		try {
-			console.log("🚀 Syncing selected chats:", selectedChatIds);
-			const integrationId = selectedIntegration?.connection?.id;
-			const result = await syncMessages(integrationId, selectedChatIds);
-			console.log("📊 Sync result:", result);
-			await Promise.all([mutateMessages(), refreshChats()]);
-			console.log("🔄 Data refreshed after sync");
+			console.log("🔍 Syncing selected chats:", selectedChatIds);
+			console.log("🔍 Import new messages:", importNew);
+
+			// Use connectionId for sync API (this is what it expects)
+			const result = await syncMessages(connectionId, selectedChatIds);
+
+			// Note: importNew setting is managed through the sync dialog UI
+			// We don't need to update it here during sync operations
+			console.log("🔍 Sync completed - importNew setting managed through UI");
+
+			console.log("✅ Sync completed:", result);
+
+			// Refresh data immediately after sync completion
+			console.log("🔄 Refreshing data after sync...");
+			await Promise.all([
+				refreshChats(), // Refresh chats list
+				mutateMessages(), // Refresh messages
+			]);
+			console.log("✅ Data refresh completed");
 		} catch (error) {
-			console.error("💥 Failed to sync selected chats:", error);
-			throw error;
+			console.error("❌ Sync failed:", error);
 		}
 	};
 
@@ -371,33 +467,25 @@ export default function MessagesPage() {
 					</Button>
 				)}
 			</div>
-			<div className="flex space-x-2">
-				<Button
-					onClick={handleSync}
-					disabled={isSyncing}
-					variant="outline"
-					className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
-					title={
-						lastSyncTime
-							? `Last synced: ${new Date(lastSyncTime).toLocaleString()}`
-							: "No previous sync"
+			<div className="flex flex-col items-end space-y-2">
+				<SyncButton
+					onSync={handleSync}
+					isSyncing={isSyncing}
+					lastSyncTime={lastSyncTime}
+					status={status}
+					integrationName={selectedIntegration?.name || undefined}
+					integrationKey={selectedIntegration?.key}
+					isDisabled={
+						selectedIntegration?.key
+							? exportSupportMap[selectedIntegration.key] === false
+							: false
 					}
-				>
-					{isSyncing ? (
-						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-					) : (
-						<Download className="mr-2 h-4 w-4" />
-					)}
-					{isSyncing
-						? `Syncing... (${status})`
-						: selectedIntegration
-						? `Sync ${selectedIntegration.name}`
-						: "Sync Messages"}
-				</Button>
+					showMessage={true}
+				/>
 
 				{/* Error display */}
 				{error && (
-					<div className="text-red-600 dark:text-red-400 text-sm mt-2">
+					<div className="text-red-600 dark:text-red-400 text-sm">
 						Error: {error}
 					</div>
 				)}
@@ -517,7 +605,7 @@ export default function MessagesPage() {
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
 							<ChatListSection
 								chats={filteredChats}
-								selectedChatId={selectedChatId}
+								selectedChatId={selectedChatId || null}
 								onChatSelect={setSelectedChatId}
 								onChatDelete={handleDeleteChat}
 								onSyncChats={handleSync}
@@ -525,6 +613,13 @@ export default function MessagesPage() {
 								isLoading={chatsLoading}
 								searchQuery={chatSearchQuery}
 								onSearchChange={handleSearchChange}
+								selectedIntegrationKey={selectedIntegration?.key || undefined}
+								status={status}
+								isDisabled={
+									selectedIntegration?.key
+										? exportSupportMap[selectedIntegration.key] === false
+										: false
+								}
 							/>
 							<ChatViewSection />
 						</div>
@@ -541,11 +636,10 @@ export default function MessagesPage() {
 					console.log("🔒 Closing sync dialog");
 					setIsSyncDialogOpen(false);
 				}}
-				integrationKey={
-					selectedIntegration?.key || selectedIntegration?.connection?.id
-				}
-				integrationName={selectedIntegration?.name}
+				integrationKey={selectedIntegration?.key || null}
+				integrationName={selectedIntegration?.name || undefined}
 				onSyncSelected={handleSyncSelectedChats}
+				selectedIntegration={selectedIntegration}
 			/>
 
 			{/* Integrations Dialog */}
