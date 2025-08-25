@@ -60,7 +60,10 @@ export async function POST(request: NextRequest) {
 				// First occurrence of this platformId, keep it but ensure importNew is true and platformId is correct
 				processedPlatformIds.add(platformKey);
 
-				const updates: any = {};
+				const updates: {
+					importNew?: boolean;
+					platformId?: string;
+				} = {};
 				let needsUpdate = false;
 
 				if (record.importNew === false) {

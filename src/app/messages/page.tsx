@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/auth-provider";
 import { useChats } from "@/hooks/use-chats";
 import { useMessages } from "@/hooks/use-messages";
 import { useSyncMessages } from "@/hooks/use-sync-messages";
@@ -15,21 +13,10 @@ import { SyncChatsDialog } from "@/components/sync-chats-dialog";
 import { IntegrationsDialog } from "@/components/integrations-dialog";
 import { DeleteChatDialog } from "@/components/delete-chat-dialog";
 import { Button } from "@/components/ui/button";
-import {
-	MessageSquare,
-	Download,
-	Loader2,
-	Plus,
-	X,
-	MessageCircle,
-} from "lucide-react";
+import { MessageSquare, Loader2, Plus, X, MessageCircle } from "lucide-react";
 import type { Message } from "@/types/message";
 import { ensureAuth } from "@/lib/auth";
-import {
-	deleteChat,
-	sendMessageToThirdParty,
-	validateMessage,
-} from "@/lib/message-api";
+import { sendMessageToThirdParty, validateMessage } from "@/lib/message-api";
 import { SyncButton } from "@/components/sync-button";
 
 // Define ConnectedApp type to match the sync dialog
@@ -37,6 +24,18 @@ interface ConnectedApp {
 	key: string;
 	name: string;
 	logoUri?: string;
+	connection?: {
+		id: string;
+	};
+	integration?: {
+		key: string;
+	};
+}
+
+// Define Integration type to match the integration context
+interface Integration {
+	key: string;
+	name: string;
 	connection?: {
 		id: string;
 	};
@@ -183,13 +182,13 @@ export default function MessagesPage() {
 
 	// Helper function to get standardized platformId
 	const getStandardizedPlatformId = (
-		integration: ConnectedApp | any
+		integration: ConnectedApp | Integration
 	): string => {
 		console.log("🔍 getStandardizedPlatformId input:", integration);
 
 		// Try to get the integration key from various possible locations
 		const platformId =
-			(integration as any).integration?.key ||
+			integration.integration?.key ||
 			integration.key ||
 			integration.name?.toLowerCase() ||
 			"unknown";
@@ -245,10 +244,7 @@ export default function MessagesPage() {
 		console.log("🔍 Integration object:", integration);
 		console.log("🔍 Integration key:", integration.key);
 		console.log("🔍 Integration connection:", integration.connection);
-		console.log(
-			"🔍 Integration integration:",
-			(integration as any).integration
-		);
+		console.log("🔍 Integration integration:", integration.integration);
 
 		// Use the standardized platformId (integration key) for UserPlatform operations
 		const platformId = getStandardizedPlatformId(integration);
@@ -478,7 +474,7 @@ export default function MessagesPage() {
 					isSyncing={isSyncing}
 					lastSyncTime={lastSyncTime}
 					status={status}
-					integrationName={selectedIntegration?.name}
+					integrationName={selectedIntegration?.name || undefined}
 					integrationKey={selectedIntegration?.key}
 					isDisabled={
 						selectedIntegration?.key
@@ -618,7 +614,7 @@ export default function MessagesPage() {
 								isLoading={chatsLoading}
 								searchQuery={chatSearchQuery}
 								onSearchChange={handleSearchChange}
-								selectedIntegrationKey={selectedIntegration?.key}
+								selectedIntegrationKey={selectedIntegration?.key || undefined}
 								status={status}
 								isDisabled={
 									selectedIntegration?.key

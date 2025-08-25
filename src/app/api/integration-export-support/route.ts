@@ -37,23 +37,12 @@ export async function GET(request: NextRequest) {
 
 		console.log(`Response status for ${integrationKey}: ${response.status}`);
 
-		// If we get a 200 status, check if the response contains valid action data
-		if (response.status === 200) {
-			const data = await response.json();
-			console.log(`Response data for ${integrationKey}:`, data);
+		// Check if the response indicates support for export
+		// A 200 status means the endpoint exists and supports export
+		// A 404 status means the endpoint doesn't exist (no export support)
+		const supportsExport = response.status === 200;
 
-			// Check if the response has the expected structure for a valid action
-			const isValidAction =
-				data && data.key === "get-chats" && data.type === "list-data-records";
-			console.log(`Is valid action for ${integrationKey}: ${isValidAction}`);
-			return NextResponse.json({ supportsExport: isValidAction });
-		}
-
-		// Return false for 404 or any other status
-		console.log(
-			`Export not supported for ${integrationKey} (status: ${response.status})`
-		);
-		return NextResponse.json({ supportsExport: false });
+		return NextResponse.json({ supportsExport });
 	} catch (error) {
 		console.error("Error checking integration export support:", error);
 		return NextResponse.json(

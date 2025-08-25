@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useIntegrations, useIntegrationApp } from "@integration-app/react";
-import { Plus, Settings, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import type { Integration } from "@integration-app/sdk";
 import { Button } from "@/components/ui/button";
 import { IntegrationsDialog } from "@/components/integrations-dialog";
+import { Settings, Plus, Sun, Moon } from "lucide-react";
 import { useIntegrationContext } from "@/contexts/integration-context";
 import { checkIntegrationSupportsChatExport } from "@/lib/integration-app-client";
+import { useTheme } from "next-themes";
 
 export function Sidebar() {
 	const { integrations } = useIntegrations();
@@ -23,7 +24,7 @@ export function Sidebar() {
 
 	// Check export support when an integration is selected
 	const handleIntegrationSelect = useCallback(
-		async (integration: any) => {
+		async (integration: Integration) => {
 			console.log("🔍 Integration selected:", integration.key);
 			setSelectedIntegration(integration);
 

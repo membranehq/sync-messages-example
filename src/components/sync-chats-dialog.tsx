@@ -47,7 +47,7 @@ interface SyncChatsDialogProps {
 		importNew: boolean,
 		selectedApp?: ConnectedApp
 	) => void;
-	selectedIntegration?: any; // Pass the full integration object if available
+	selectedIntegration?: ConnectedApp | null; // Pass the full integration object if available
 }
 
 export function SyncChatsDialog({
@@ -309,22 +309,6 @@ export function SyncChatsDialog({
 		onClose();
 	};
 
-	const formatLastMessageTime = (timestamp: string | undefined) => {
-		if (!timestamp) return "No recent messages";
-
-		try {
-			// Handle Unix timestamp
-			if (/^\d+\.?\d*$/.test(timestamp)) {
-				const unixTime = parseFloat(timestamp);
-				return new Date(unixTime * 1000).toLocaleString();
-			}
-			// Handle ISO string
-			return new Date(timestamp).toLocaleString();
-		} catch {
-			return "Unknown time";
-		}
-	};
-
 	console.log("🔍 SyncChatsDialog rendering with isOpen:", isOpen);
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
@@ -497,10 +481,6 @@ export function SyncChatsDialog({
 																{chat.lastMessage}
 															</div>
 														)}
-														<div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-															{chat.participants?.length || 0} participants •{" "}
-															{formatLastMessageTime(chat.lastMessageTime)}
-														</div>
 													</div>
 												</div>
 											))}

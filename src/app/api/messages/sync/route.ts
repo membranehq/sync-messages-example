@@ -50,12 +50,30 @@ export async function POST(request: NextRequest) {
 		const connectionsResponse = await client.connections.find();
 		let connections = connectionsResponse.items || [];
 
+		console.log(
+			`🔍 Available connections:`,
+			connections.map((c) => ({
+				id: c.id,
+				name: c.name,
+				integrationKey: c.integration?.key,
+			}))
+		);
+		console.log(`🔍 Requested integrationId:`, integrationId);
+
 		// Filter by integration ID if provided
 		if (integrationId) {
 			connections = connections.filter(
 				(connection) => connection.id === integrationId
 			);
 			console.log(`🔍 Filtering sync to integration: ${integrationId}`);
+			console.log(
+				`🔍 Filtered connections:`,
+				connections.map((c) => ({
+					id: c.id,
+					name: c.name,
+					integrationKey: c.integration?.key,
+				}))
+			);
 		}
 
 		if (connections.length === 0) {

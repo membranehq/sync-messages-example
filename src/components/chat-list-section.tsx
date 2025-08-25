@@ -43,7 +43,7 @@ export function ChatListSection({
 			</div>
 
 			{/* Search */}
-			<div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+			<div className="p-1 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
 				<ChatSearch
 					value={searchQuery}
 					onChange={onSearchChange || (() => {})}
