@@ -1,0 +1,111 @@
+id: 689ceacbc6f23aeb17cae98e
+name: Receive Message Events
+isDeactivated: false
+state: READY
+errors: []
+key: receive-message-events
+universalFlowId: 68814411f2eacefeb83c3b92
+integrationId: 6881441c8bc4980214fdb45b
+nodes:
+  message-created-trigger:
+    type: data-record-created-trigger
+    name: Message Created Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: get-all-message-fields-by-id
+  message-updated-trigger:
+    type: data-record-updated-trigger
+    name: Message Updated Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: get-all-message-fields-by-id
+  get-all-message-fields-by-id:
+    type: find-data-record-by-id
+    name: Get all Message fields by Id
+    config:
+      dataSource:
+        key: messages
+      fieldMapping:
+        key: messages
+        includeRawFields: true
+      id:
+        $var: $.input.message-created-trigger.record.id
+    links:
+      - key: send-message-payload-to-my-app
+  message-deleted-trigger:
+    type: data-record-deleted-trigger
+    name: Message Deleted Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: send-message-payload-to-my-app
+  send-message-payload-to-my-app:
+    type: api-request-to-your-app
+    name: Send Message payload to my App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.message-received.messages[0].id
+          customerId:
+            $var: $.user.internalId
+          data:
+            id:
+              $var: $.input.message-received.messages[0].id
+            content:
+              $var: $.input.message-received.messages[0].text.body
+            ownerId:
+              $var: $.input.message-received.messages[0].from
+            chatId:
+              $var: $.input.message-received.contacts[0].wa_id
+            timestamp:
+              $var: $.input.message-received.messages[0].timestamp
+            ownerName:
+              $var: $.input.message-received.contacts[0].profile.name
+            platformName: Whatsapp
+        uri: /api/messages/receive
+        method: POST
+    links: []
+  message-received:
+    type: connector-event-trigger
+    name: Message Received
+    config:
+      eventKey: message-received
+    links:
+      - key: get-all-message-fields-by-id
+autoCreateInstances: true
+customized: true
+integration:
+  id: 6881441c8bc4980214fdb45b
+  name: Whatsapp
+  key: whatsapp
+  uuid: 4710a9d0-8b3d-402e-bf1a-25b852fe956f
+  state: READY
+  errors: []
+  createdAt: '2025-07-23T20:20:44.608Z'
+  updatedAt: '2025-07-23T20:20:44.948Z'
+  isDeactivated: false
+  logoUri: https://static.integration.app/connectors/whatsapp/logohq.png
+  connectorId: 6466785c60f981f3ce69691e
+  connectorVersion: 1.0.3
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 55
+  hasData: true
+  dataCollectionsCount: 1
+  hasEvents: true
+  eventsCount: 1
+  hasGlobalWebhooks: true
+  hasUdm: true
+  appUuid: f47522b5-96db-474f-bd64-eb63f1de49d3
+  authType: client-credentials
+integrationKey: whatsapp

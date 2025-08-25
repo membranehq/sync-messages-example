@@ -1,9 +1,9 @@
-key: get-users-ids
-state: READY
-errors: []
-isDeactivated: false
 id: 689206bfe7f1f6d2a4a45b78
 name: Get users IDs
+isDeactivated: false
+state: READY
+errors: []
+key: get-users-ids
 nodes:
   api-trigger:
     type: api-trigger

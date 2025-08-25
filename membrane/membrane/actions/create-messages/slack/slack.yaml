@@ -1,13 +1,11 @@
-isCustomized: false
-parentId: 6888d2459428ff0cd8a73926
-integrationId: 6881440ff2eacefeb83c3adf
+id: 6888d336e551218bc487a753
+name: 'Create: Messages'
 key: create-messages
 state: READY
 errors: []
 isDeactivated: false
-id: 6888d336e551218bc487a753
-name: 'Create: Messages'
-type: create-data-record
+integrationId: 6881440ff2eacefeb83c3adf
+parentId: 6888d2459428ff0cd8a73926
 inputSchema:
   type: object
   properties:
@@ -48,6 +46,7 @@ inputSchema:
           type: string
         updatedBy:
           type: string
+type: create-data-record
 config:
   dataSource:
     key: messages
@@ -55,4 +54,5 @@ config:
     key: messages
     input:
       $var: $.input.data
+isCustomized: false
 integrationKey: slack

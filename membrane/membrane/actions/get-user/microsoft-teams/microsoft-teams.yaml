@@ -1,21 +1,19 @@
-isCustomized: true
-parentId: 688773a10fd23b4596ee34d3
-integrationId: 6881440ff2eacefeb83c3ae1
-key: get-user
-state: CONFIGURATION_ERROR
-errors:
-  - message: Integration Dependency has error(s)
-    type: dependency_error
-    data:
-      workspaceElementReference:
-        type: integration
-        id: 6881440ff2eacefeb83c3ae1
-isDeactivated: false
 id: 688773ba28f0e8eb060cb607
 name: Get User
+key: get-user
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 6881440ff2eacefeb83c3ae1
+parentId: 688773a10fd23b4596ee34d3
 type: api-request-to-external-app
 config:
   request:
     path: /me
     method: GET
+outputMapping:
+  userId:
+    $var: $.output.data.mail
+  platform: Microsoft Teams
+isCustomized: true
 integrationKey: microsoft-teams

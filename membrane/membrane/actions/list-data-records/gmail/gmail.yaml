@@ -1,0 +1,13 @@
+id: 689f2fd64b4151f89a714ec3
+name: List Data Records
+key: list-data-records
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 688773c67e68e15f9f5d9f44
+type: create-data-record
+config:
+  dataSource:
+    collectionKey: emails
+isCustomized: true
+integrationKey: gmail

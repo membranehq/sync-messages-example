@@ -1,0 +1,99 @@
+id: 68acc8c9608a18682b3c2626
+name: Receive Message Events
+isDeactivated: false
+state: READY
+errors: []
+key: receive-message-events
+universalFlowId: 68814411f2eacefeb83c3b92
+integrationId: 6896010055a57ed9b113282f
+nodes:
+  message-created-trigger:
+    type: data-record-created-trigger
+    name: Message Created Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: send-message-payload-to-my-app
+  message-updated-trigger:
+    type: data-record-updated-trigger
+    name: Message Updated Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: send-message-payload-to-my-app
+  message-deleted-trigger:
+    type: data-record-deleted-trigger
+    name: Message Deleted Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: send-message-payload-to-my-app
+  send-message-payload-to-my-app:
+    type: api-request-to-your-app
+    name: Send Message payload to my App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.all-events.value.message.mid
+          data:
+            id:
+              $var: $.input.all-events.value.message.mid
+            content:
+              $var: $.input.all-events.value.message.text
+            ownerId:
+              $var: $.input.all-events.value.sender.id
+            chatId:
+              $var: $.input.all-events.value.sender.id
+            timestamp:
+              $var: $.input.all-events.value.timestamp
+            ownerName:
+              $var: $.input.all-events.value.sender.id
+            platformName: Facebook Messenger
+          customerId:
+            $var: $.user.internalId
+        uri: /api/messages/receive
+        method: POST
+    links: []
+  all-events:
+    type: connector-event-trigger
+    name: All Events
+    config:
+      eventKey: all-events
+    links:
+      - key: send-message-payload-to-my-app
+autoCreateInstances: true
+customized: true
+integration:
+  id: 6896010055a57ed9b113282f
+  name: Facebook Messenger
+  key: facebook-messenger
+  uuid: 91389725-5e3e-4a68-91ea-5f5cb3da4277
+  state: READY
+  errors: []
+  createdAt: '2025-08-08T13:52:00.654Z'
+  updatedAt: '2025-08-25T20:28:32.533Z'
+  isDeactivated: false
+  logoUri: >-
+    https://static.integration.app/connectors/facebook-messenger/asset-7ee28048-6ac8-4c68-b3d7-5686a014aac5.png
+  connectorId: 68790e093c393516b6806da5
+  connectorVersion: 1.0.0
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 3
+  hasData: true
+  dataCollectionsCount: 2
+  hasEvents: true
+  eventsCount: 1
+  hasGlobalWebhooks: true
+  hasUdm: false
+  appUuid: 67561e97-c0e8-4dcd-9b03-53c93a066d3a
+  authType: oauth2
+integrationKey: facebook-messenger

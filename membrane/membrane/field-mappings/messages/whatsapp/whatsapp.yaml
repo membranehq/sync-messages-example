@@ -1,0 +1,70 @@
+id: 689ceacbc6f23aeb17cae95a
+name: Messages
+isDeactivated: false
+state: READY
+errors: []
+key: messages
+customized: true
+universalFieldMappingId: 68814411f2eacefeb83c3b3d
+integrationId: 6881441c8bc4980214fdb45b
+dataSourceKey: messages
+direction: both
+defaultImportValue:
+  id:
+    $var: $.id
+  content:
+    $var: $.text
+  ownerId:
+    $var: $.ownerId
+  chatId:
+    $var: $.channelId
+  timestamp:
+    $var: $.createdTime
+  ownerName:
+    $var: $.createdBy
+exportValue:
+  to:
+    $var: $.chatId
+  text:
+    body:
+      $var: $.content
+  context:
+    message_id:
+      $var: $.id
+importValue:
+  id:
+    $var: $.context.message_id
+  content:
+    $var: $.text.body
+  ownerId:
+    $var: $.to
+  chatId:
+    $var: $.to
+  ownerName:
+    $var: $.to
+integration:
+  id: 6881441c8bc4980214fdb45b
+  name: Whatsapp
+  key: whatsapp
+  uuid: 4710a9d0-8b3d-402e-bf1a-25b852fe956f
+  state: READY
+  errors: []
+  createdAt: '2025-07-23T20:20:44.608Z'
+  updatedAt: '2025-07-23T20:20:44.948Z'
+  isDeactivated: false
+  logoUri: https://static.integration.app/connectors/whatsapp/logohq.png
+  connectorId: 6466785c60f981f3ce69691e
+  connectorVersion: 1.0.3
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 55
+  hasData: true
+  dataCollectionsCount: 1
+  hasEvents: true
+  eventsCount: 1
+  hasGlobalWebhooks: true
+  hasUdm: true
+  appUuid: f47522b5-96db-474f-bd64-eb63f1de49d3
+  authType: client-credentials
+integrationKey: whatsapp

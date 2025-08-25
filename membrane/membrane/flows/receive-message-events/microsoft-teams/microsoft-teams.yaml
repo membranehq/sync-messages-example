@@ -1,55 +1,11 @@
-key: receive-message-events
-state: CONFIGURATION_ERROR
-errors:
-  - message: Integration Dependency has error(s)
-    type: dependency_error
-    data:
-      workspaceElementReference:
-        type: integration
-        id: 6881440ff2eacefeb83c3ae1
-  - message: Data Source Dependency has error(s)
-    type: dependency_error
-    data:
-      workspaceElementReference:
-        type: data-source
-        id: 68814411f2eacefeb83c3b2d
-  - message: Field Mapping Dependency has error(s)
-    type: dependency_error
-    data:
-      workspaceElementReference:
-        type: field-mapping
-        id: 68814411f2eacefeb83c3b4e
-isDeactivated: false
 id: 68814411f2eacefeb83c3c31
 name: Receive Message Events
+isDeactivated: false
+state: READY
+errors: []
+key: receive-message-events
 universalFlowId: 68814411f2eacefeb83c3b92
 integrationId: 6881440ff2eacefeb83c3ae1
-integration:
-  key: microsoft-teams
-  state: CONFIGURATION_ERROR
-  errors:
-    - message: Integration is missing required parameters
-      type: configuration
-  isDeactivated: false
-  id: 6881440ff2eacefeb83c3ae1
-  name: Microsoft Teams
-  uuid: 8c24eb6c-563f-40c7-843a-5281ac6e08b5
-  connectorId: 6466784e60f981f3ce696907
-  hasMissingParameters: true
-  hasDocumentation: true
-  hasOperations: true
-  hasData: true
-  hasEvents: true
-  hasGlobalWebhooks: false
-  hasUdm: true
-  baseUri: s3://integration-app-connectors/public/d2f487ff-7381-409e-9098-2f4d4f51ca51
-  connectorVersion: 2.3.1
-  logoUri: >-
-    https://static.integration.app/connectors/microsoft-teams/logo-af77620a-4317-47b1-a365-419da992ef0b.png
-  dataCollectionsCount: 10
-  operationsCount: 390
-  eventsCount: 4
-  authType: oauth2
 nodes:
   message-created-trigger:
     type: data-record-created-trigger
@@ -101,7 +57,36 @@ nodes:
             $var: $.input.get-all-message-fields-by-id.id
           data:
             $var: $.input.get-all-message-fields-by-id
+          customerId:
+            $var: $.user.internalId
+        uri: /api/messages/receive
+        method: POST
     links: []
 autoCreateInstances: true
 customized: false
+integration:
+  id: 6881440ff2eacefeb83c3ae1
+  name: Microsoft Teams
+  key: microsoft-teams
+  uuid: 8c24eb6c-563f-40c7-843a-5281ac6e08b5
+  state: READY
+  errors: []
+  createdAt: '2025-07-23T20:20:31.019Z'
+  updatedAt: '2025-08-25T19:39:12.864Z'
+  isDeactivated: false
+  logoUri: >-
+    https://static.integration.app/connectors/microsoft-teams/logo-af77620a-4317-47b1-a365-419da992ef0b.png
+  connectorId: 6466784e60f981f3ce696907
+  connectorVersion: 2.3.3
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 390
+  hasData: true
+  dataCollectionsCount: 10
+  hasEvents: true
+  eventsCount: 4
+  hasGlobalWebhooks: false
+  hasUdm: true
+  authType: oauth2
 integrationKey: microsoft-teams

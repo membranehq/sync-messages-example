@@ -1,8 +1,8 @@
-key: messages
-state: READY
-errors: []
-isDeactivated: false
 id: 68814411f2eacefeb83c3b20
 name: Messages
+isDeactivated: false
+state: READY
+errors: []
+key: messages
 customized: false
 udm: messages

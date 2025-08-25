@@ -1,0 +1,92 @@
+id: 689ceacbc6f23aeb17cae972
+name: Receive Message Events
+isDeactivated: false
+state: READY
+errors: []
+key: receive-message-events
+universalFlowId: 68814411f2eacefeb83c3b92
+integrationId: 688773c67e68e15f9f5d9f44
+nodes:
+  message-created-trigger:
+    type: data-record-created-trigger
+    name: Message Created Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: get-all-message-fields-by-id
+  message-updated-trigger:
+    type: data-record-updated-trigger
+    name: Message Updated Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: get-all-message-fields-by-id
+  get-all-message-fields-by-id:
+    type: find-data-record-by-id
+    name: Get all Message fields by Id
+    config:
+      dataSource:
+        key: messages
+      fieldMapping:
+        key: messages
+        includeRawFields: true
+      id:
+        $var: $.input.message-created-trigger.record.id
+    links:
+      - key: send-message-payload-to-my-app
+  message-deleted-trigger:
+    type: data-record-deleted-trigger
+    name: Message Deleted Trigger
+    config:
+      dataSource:
+        key: messages
+      fieldMapping: {}
+    links:
+      - key: send-message-payload-to-my-app
+  send-message-payload-to-my-app:
+    type: api-request-to-your-app
+    name: Send Message payload to my App
+    config:
+      request:
+        body:
+          externalMessageId:
+            $var: $.input.get-all-message-fields-by-id.id
+          data:
+            $var: $.input.get-all-message-fields-by-id.fields
+          customerId:
+            $var: $.user.internalId
+        uri: /api/messages/receive
+        method: POST
+    links: []
+autoCreateInstances: true
+customized: true
+integration:
+  id: 688773c67e68e15f9f5d9f44
+  name: Gmail
+  key: gmail
+  uuid: 7770b04b-d62c-41f8-bfab-de4d0b452631
+  state: READY
+  errors: []
+  createdAt: '2025-07-28T12:57:42.703Z'
+  updatedAt: '2025-08-08T19:59:12.905Z'
+  isDeactivated: false
+  logoUri: https://static.integration.app/connectors/gmail/logo.png
+  connectorId: 64300cd1986ed1caad6e23ae
+  connectorVersion: 1.5.2
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 81
+  hasData: true
+  dataCollectionsCount: 3
+  hasEvents: false
+  eventsCount: 0
+  hasGlobalWebhooks: false
+  hasUdm: true
+  appUuid: 86df8323-db7d-4622-a3e9-5b4c0f725177
+  authType: oauth2
+integrationKey: gmail

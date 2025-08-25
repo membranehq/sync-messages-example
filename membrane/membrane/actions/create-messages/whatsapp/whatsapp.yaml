@@ -1,0 +1,59 @@
+id: 68ac7de2ed1cd64aebba4248
+name: 'Create: Messages'
+key: create-messages
+uuid: 5913f8f6-7900-4f6b-b3cc-e8a1eea36702
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 6881441c8bc4980214fdb45b
+parentId: 6888d2459428ff0cd8a73926
+inputSchema:
+  type: object
+  properties:
+    customerId:
+      type: string
+    internalMessageId:
+      type: string
+    data:
+      type: object
+      properties:
+        content:
+          type: string
+        sender:
+          type: string
+        recipient:
+          type: string
+        chatId:
+          type: string
+        chatName:
+          type: string
+        chatType:
+          type: string
+        platformId:
+          type: string
+        platformName:
+          type: string
+        messageType:
+          type: string
+        status:
+          type: string
+        sentTime:
+          type: string
+        createdTime:
+          type: string
+        createdBy:
+          type: string
+        updatedTime:
+          type: string
+        updatedBy:
+          type: string
+type: create-data-record
+config:
+  dataSource:
+    key: messages
+  fieldMapping:
+    key: messages
+    input:
+      $var: $.input.data
+isCustomized: false
+integrationKey: whatsapp

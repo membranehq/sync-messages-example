@@ -1,13 +1,11 @@
-isCustomized: true
-parentId: 68814411f2eacefeb83c3b64
-integrationId: 6881440ff2eacefeb83c3adf
+id: 68814411f2eacefeb83c3b74
+name: Get Messages
 key: get-messages
 state: READY
 errors: []
 isDeactivated: false
-id: 68814411f2eacefeb83c3b74
-name: Get Messages
-type: list-data-records
+integrationId: 6881440ff2eacefeb83c3adf
+parentId: 68814411f2eacefeb83c3b64
 inputSchema:
   type: object
   properties:
@@ -15,6 +13,7 @@ inputSchema:
       type: string
     channelId:
       type: string
+type: list-data-records
 config:
   dataSource:
     collectionKey: messages
@@ -26,4 +25,5 @@ config:
   fieldMapping:
     key: messages
     includeRawFields: true
+isCustomized: true
 integrationKey: slack

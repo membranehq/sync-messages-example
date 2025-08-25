@@ -1,11 +1,9 @@
-isCustomized: true
+id: 68814411f2eacefeb83c3b64
+name: Get Messages
 key: get-messages
 state: READY
 errors: []
 isDeactivated: false
-id: 68814411f2eacefeb83c3b64
-name: Get Messages
-type: list-data-records
 inputSchema:
   type: object
   properties:
@@ -13,6 +11,7 @@ inputSchema:
       type: string
     channelId:
       type: string
+type: list-data-records
 config:
   dataSource:
     udm: messages
@@ -21,3 +20,4 @@ config:
   fieldMapping:
     key: messages
     includeRawFields: true
+isCustomized: true

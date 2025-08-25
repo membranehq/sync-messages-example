@@ -1,0 +1,20 @@
+id: 68acc6c599059a0fa7fc2264
+name: Get User
+key: get-user
+uuid: aae9d89c-6102-4337-9039-875f7df33874
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 6896010055a57ed9b113282f
+parentId: 688773a10fd23b4596ee34d3
+type: api-request-to-external-app
+config:
+  request:
+    path: /me
+    method: GET
+outputMapping:
+  userId:
+    $var: $.output.data.id
+  platform: Facebook Messenger
+isCustomized: true
+integrationKey: facebook-messenger
