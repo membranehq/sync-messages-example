@@ -244,7 +244,6 @@ export default function MessagesPage() {
 		console.log("🔍 Integration object:", integration);
 		console.log("🔍 Integration key:", integration.key);
 		console.log("🔍 Integration connection:", integration.connection);
-		console.log("🔍 Integration integration:", integration.integration);
 
 		// Use the standardized platformId (integration key) for UserPlatform operations
 		const platformId = getStandardizedPlatformId(integration);
@@ -606,7 +605,7 @@ export default function MessagesPage() {
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
 							<ChatListSection
 								chats={filteredChats}
-								selectedChatId={selectedChatId}
+								selectedChatId={selectedChatId || null}
 								onChatSelect={setSelectedChatId}
 								onChatDelete={handleDeleteChat}
 								onSyncChats={handleSync}
