@@ -1,0 +1,38 @@
+id: 68acc79387bc07a19146990b
+name: Chats
+isDeactivated: false
+state: READY
+errors: []
+key: chats
+customized: false
+universalFieldMappingId: 688144d433816c4cd08e963e
+integrationId: 6896010055a57ed9b113282f
+dataSourceKey: chats
+direction: both
+integration:
+  id: 6896010055a57ed9b113282f
+  name: Facebook Messenger
+  key: facebook-messenger
+  uuid: 91389725-5e3e-4a68-91ea-5f5cb3da4277
+  state: READY
+  errors: []
+  createdAt: '2025-08-08T13:52:00.654Z'
+  updatedAt: '2025-08-25T20:28:32.533Z'
+  isDeactivated: false
+  logoUri: >-
+    https://static.integration.app/connectors/facebook-messenger/asset-7ee28048-6ac8-4c68-b3d7-5686a014aac5.png
+  connectorId: 68790e093c393516b6806da5
+  connectorVersion: 1.0.0
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 3
+  hasData: true
+  dataCollectionsCount: 2
+  hasEvents: true
+  eventsCount: 1
+  hasGlobalWebhooks: true
+  hasUdm: false
+  appUuid: 67561e97-c0e8-4dcd-9b03-53c93a066d3a
+  authType: oauth2
+integrationKey: facebook-messenger

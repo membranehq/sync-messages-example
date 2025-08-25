@@ -1,0 +1,20 @@
+id: 68acc5b56469c8d1187789cf
+name: Get User
+key: get-user
+uuid: 505a0876-4b64-4e64-b570-0140c8e61c03
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 688773c60a582d3a4b0a1d28
+parentId: 688773a10fd23b4596ee34d3
+type: find-data-record-by-id
+config:
+  id: me
+  dataSource:
+    collectionKey: users
+outputMapping:
+  userId:
+    $var: $.output.fields.mail
+  platform: Microsoft Outlook
+isCustomized: true
+integrationKey: microsoft-outlook

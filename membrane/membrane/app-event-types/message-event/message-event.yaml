@@ -1,9 +1,7 @@
-key: message-event
-isDeactivated: false
 id: 68814411f2eacefeb83c3b16
 name: Message Event
-globalWebhookUri: >-
-  https://api.integration.app/webhooks/app-events/6303ba6b-ba9d-498f-b314-fb5b07a44721
+isDeactivated: false
+key: message-event
 schema:
   type: object
   properties:
@@ -107,3 +105,5 @@ schema:
       description: External platform message ID
 userIdFormula:
   $var: $.customerId
+globalWebhookUri: >-
+  https://api.integration.app/webhooks/app-events/6303ba6b-ba9d-498f-b314-fb5b07a44721

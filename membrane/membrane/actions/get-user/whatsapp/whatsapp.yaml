@@ -1,15 +1,19 @@
-isCustomized: true
-parentId: 688773a10fd23b4596ee34d3
-integrationId: 6881441c8bc4980214fdb45b
+id: 688773ba28f0e8eb060cb60b
+name: Get User
 key: get-user
 state: READY
 errors: []
 isDeactivated: false
-id: 688773ba28f0e8eb060cb60b
-name: Get User
+integrationId: 6881441c8bc4980214fdb45b
+parentId: 688773a10fd23b4596ee34d3
 type: api-request-to-external-app
 config:
   request:
-    path: /account
-    method: GET
+    path: '?fields=id,display_phone_number,verified_name'
+    method: get
+outputMapping:
+  userId:
+    $var: $.output.data.display_phone_number
+  platform: Whatsapp
+isCustomized: true
 integrationKey: whatsapp

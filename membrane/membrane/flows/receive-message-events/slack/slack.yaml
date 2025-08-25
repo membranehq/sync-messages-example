@@ -1,34 +1,11 @@
-key: receive-message-events
-state: READY
-errors: []
-isDeactivated: false
 id: 68814411f2eacefeb83c3c48
 name: Receive Message Events
+isDeactivated: false
+state: READY
+errors: []
+key: receive-message-events
 universalFlowId: 68814411f2eacefeb83c3b92
 integrationId: 6881440ff2eacefeb83c3adf
-integration:
-  key: slack
-  state: READY
-  errors: []
-  isDeactivated: false
-  id: 6881440ff2eacefeb83c3adf
-  name: Slack
-  uuid: dfa66b83-509e-44bd-a2bd-9db171dbfdf6
-  connectorId: 643084d0986ed1caad854e41
-  hasMissingParameters: false
-  hasDocumentation: true
-  hasOperations: true
-  hasData: true
-  hasEvents: true
-  hasGlobalWebhooks: true
-  hasUdm: true
-  baseUri: s3://integration-app-connectors/public/62888f42-6315-4822-b97e-ef53b13a082a
-  connectorVersion: 1.3.1
-  logoUri: https://static.integration.app/connectors/slack/logo.png
-  dataCollectionsCount: 3
-  operationsCount: 246
-  eventsCount: 79
-  authType: oauth2
 nodes:
   message-created-trigger:
     type: data-record-created-trigger
@@ -83,4 +60,28 @@ nodes:
       - key: send-message-payload-to-my-app
 autoCreateInstances: true
 customized: true
+integration:
+  id: 6881440ff2eacefeb83c3adf
+  name: Slack
+  key: slack
+  uuid: dfa66b83-509e-44bd-a2bd-9db171dbfdf6
+  state: READY
+  errors: []
+  createdAt: '2025-07-23T20:20:31.017Z'
+  updatedAt: '2025-08-05T13:50:04.571Z'
+  isDeactivated: false
+  logoUri: https://static.integration.app/connectors/slack/logo.png
+  connectorId: 643084d0986ed1caad854e41
+  connectorVersion: 1.3.1
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 246
+  hasData: true
+  dataCollectionsCount: 3
+  hasEvents: true
+  eventsCount: 79
+  hasGlobalWebhooks: true
+  hasUdm: true
+  authType: oauth2
 integrationKey: slack

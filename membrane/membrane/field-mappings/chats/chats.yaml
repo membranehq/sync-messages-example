@@ -1,9 +1,9 @@
-key: chats
-state: READY
-errors: []
-isDeactivated: false
 id: 688144d433816c4cd08e963e
 name: Chats
+isDeactivated: false
+state: READY
+errors: []
+key: chats
 customized: true
 dataSourceKey: chats
 direction: both

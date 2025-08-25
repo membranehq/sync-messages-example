@@ -1,0 +1,19 @@
+id: 68acbdc8e4bae9af2f504a57
+name: Get Chats
+key: get-chats
+uuid: d804fdad-319b-4e88-9f58-701c406696fc
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 688773c60a582d3a4b0a1d28
+parentId: 688144b55c999fea55f50f91
+inputSchema:
+  type: object
+  properties:
+    cursor:
+      type: string
+type: run-javascript
+config:
+  code: "async function fetchOutlookThreads(externalApiClient) {\n\ttry {\n\t\t// Fetch messages from Outlook API\n\t\tconst messagesResponse = await externalApiClient.get(\n\t\t\t`https://graph.microsoft.com/v1.0/me/messages?$top=100&$orderby=receivedDateTime desc`\n\t\t);\n\n\t\tconst messages = messagesResponse?.value;\n\t\tif (!messages || messages.length === 0) {\n\t\t\treturn [];\n\t\t}\n\n\t\t// Group messages by conversationId to create threads\n\t\tconst threadMap = new Map();\n\n\t\tmessages.forEach((message) => {\n\t\t\tconst conversationId = message.conversationId;\n\n\t\t\tif (!threadMap.has(conversationId)) {\n\t\t\t\t// Create new thread entry\n\t\t\t\tthreadMap.set(conversationId, {\n\t\t\t\t\tid: conversationId,\n\t\t\t\t\tname: message.subject || \"No Subject\",\n\t\t\t\t\tcreatedTime: new Date(message.receivedDateTime).getTime() / 1000,\n\t\t\t\t\tupdatedTime: new Date(message.lastModifiedDateTime).getTime(),\n\t\t\t\t\tcreatedById: message.from?.emailAddress?.address || null,\n\t\t\t\t\tplatform: \"Outlook\",\n\t\t\t\t});\n\t\t\t} else {\n\t\t\t\t// Update existing thread with latest message info\n\t\t\t\tconst existingThread = threadMap.get(conversationId);\n\t\t\t\tconst messageTime = new Date(message.receivedDateTime).getTime() / 1000;\n\t\t\t\tconst lastModifiedTime = new Date(\n\t\t\t\t\tmessage.lastModifiedDateTime\n\t\t\t\t).getTime();\n\n\t\t\t\t// Update if this message is newer\n\t\t\t\tif (messageTime > existingThread.createdTime) {\n\t\t\t\t\texistingThread.createdTime = messageTime;\n\t\t\t\t\texistingThread.updatedTime = lastModifiedTime;\n\t\t\t\t\texistingThread.createdById =\n\t\t\t\t\t\tmessage.from?.emailAddress?.address || existingThread.createdById;\n\t\t\t\t}\n\t\t\t}\n\t\t});\n\n\t\t// Convert map to array and sort by updatedTime (newest first)\n\t\tconst threads = Array.from(threadMap.values())\n\t\t\t.sort((a, b) => b.updatedTime - a.updatedTime)\n\t\t\t.slice(0, 50); // Limit to first 50 threads\n\n\t\treturn threads;\n\t} catch (error) {\n\t\tthrow error;\n\t}\n}\n\nmodule.exports = async function ({ input, externalApiClient }) {\n\ttry {\n\t\t// Fetch Outlook threads\n\t\tconst threads = await fetchOutlookThreads(externalApiClient);\n\n\t\t// Transform threads to the required format\n\t\tconst records = threads.map((thread) => ({\n\t\t\tfields: {\n\t\t\t\tid: thread.id,\n\t\t\t\tplatform: thread.platform,\n\t\t\t\tname: thread.name,\n\t\t\t},\n\t\t\tid: thread.id,\n\t\t\tname: thread.name,\n\t\t\tcreatedTime: thread.createdTime,\n\t\t\tupdatedTime: thread.updatedTime,\n\t\t\tcreatedById: thread.createdById,\n\t\t}));\n\n\t\t// Return the result in the expected format\n\t\treturn {\n\t\t\trecords: records,\n\t\t};\n\t} catch (error) {\n\t\tthrow error;\n\t}\n};\n"
+isCustomized: true
+integrationKey: microsoft-outlook

@@ -1,35 +1,11 @@
-key: get-users-ids
-state: READY
-errors: []
-isDeactivated: false
 id: 68920744a1342ecab606aacb
 name: Get users IDs
+isDeactivated: false
+state: READY
+errors: []
+key: get-users-ids
 universalFlowId: 689206bfe7f1f6d2a4a45b78
 integrationId: 688773c67e68e15f9f5d9f44
-integration:
-  key: gmail
-  state: READY
-  errors: []
-  isDeactivated: false
-  id: 688773c67e68e15f9f5d9f44
-  name: Gmail
-  uuid: 7770b04b-d62c-41f8-bfab-de4d0b452631
-  connectorId: 64300cd1986ed1caad6e23ae
-  hasMissingParameters: false
-  hasDocumentation: true
-  hasOperations: true
-  hasData: true
-  hasEvents: false
-  hasGlobalWebhooks: false
-  hasUdm: true
-  baseUri: s3://integration-app-connectors/public/9c29637a-8512-4f98-817c-5faa1e0defdc
-  connectorVersion: 1.5.2
-  logoUri: https://static.integration.app/connectors/gmail/logo.png
-  appUuid: 86df8323-db7d-4622-a3e9-5b4c0f725177
-  dataCollectionsCount: 3
-  operationsCount: 81
-  eventsCount: 0
-  authType: oauth2
 nodes:
   api-trigger:
     type: api-trigger
@@ -76,4 +52,29 @@ nodes:
     links: []
 autoCreateInstances: false
 customized: false
+integration:
+  id: 688773c67e68e15f9f5d9f44
+  name: Gmail
+  key: gmail
+  uuid: 7770b04b-d62c-41f8-bfab-de4d0b452631
+  state: READY
+  errors: []
+  createdAt: '2025-07-28T12:57:42.703Z'
+  updatedAt: '2025-08-08T19:59:12.905Z'
+  isDeactivated: false
+  logoUri: https://static.integration.app/connectors/gmail/logo.png
+  connectorId: 64300cd1986ed1caad6e23ae
+  connectorVersion: 1.5.2
+  hasMissingParameters: false
+  hasDocumentation: true
+  hasOperations: true
+  operationsCount: 81
+  hasData: true
+  dataCollectionsCount: 3
+  hasEvents: false
+  eventsCount: 0
+  hasGlobalWebhooks: false
+  hasUdm: true
+  appUuid: 86df8323-db7d-4622-a3e9-5b4c0f725177
+  authType: oauth2
 integrationKey: gmail

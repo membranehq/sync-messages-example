@@ -1,11 +1,26 @@
-key: messages
-state: READY
-errors: []
-isDeactivated: false
 id: 68814411f2eacefeb83c3b3d
 name: Messages
+isDeactivated: false
+state: READY
+errors: []
+key: messages
 customized: true
 dataSourceKey: messages
+appSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    content:
+      type: string
+    ownerId:
+      type: string
+    chatId:
+      type: string
+    timestamp:
+      type: string
+    ownerName:
+      type: string
 direction: both
 defaultImportValue:
   id:
@@ -16,6 +31,23 @@ defaultImportValue:
     $var: $.ownerId
   chatId:
     $var: $.channelId
+  timestamp:
+    $var: $.createdTime
+  ownerName:
+    $var: $.createdBy
+  platformName: null
+  integrationId: null
+defaultExportValue:
+  subject:
+    $var: $.content
+  channelId:
+    $var: $.chatId
+  threadId:
+    $var: $.chatId
+  text:
+    $var: $.content
+  ownerId:
+    $var: $.ownerId
 importValue:
   id:
     $var: $.ts

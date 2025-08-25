@@ -1,12 +1,11 @@
-isCustomized: true
-parentId: 688773a10fd23b4596ee34d3
-integrationId: 6881440ff2eacefeb83c3adf
+id: 688773ba28f0e8eb060cb603
+name: Get User
 key: get-user
 state: READY
 errors: []
 isDeactivated: false
-id: 688773ba28f0e8eb060cb603
-name: Get User
+integrationId: 6881440ff2eacefeb83c3adf
+parentId: 688773a10fd23b4596ee34d3
 type: api-request-to-external-app
 config:
   request:
@@ -21,4 +20,5 @@ outputMapping:
   userId:
     $var: $.output.data.user_id
   platform: Slack
+isCustomized: true
 integrationKey: slack

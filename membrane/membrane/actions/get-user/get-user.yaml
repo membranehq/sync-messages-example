@@ -1,10 +1,9 @@
-isCustomized: false
+id: 688773a10fd23b4596ee34d3
+name: Get User
 key: get-user
 state: READY
 errors: []
 isDeactivated: false
-id: 688773a10fd23b4596ee34d3
-name: Get User
 type: search-data-record
 config:
   fieldMapping:
@@ -12,3 +11,4 @@ config:
       $var: $
   dataSource:
     udm: users
+isCustomized: false

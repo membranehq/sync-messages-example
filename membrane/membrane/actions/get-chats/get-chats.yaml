@@ -1,16 +1,15 @@
-isCustomized: true
+id: 688144b55c999fea55f50f91
+name: Get Chats
 key: get-chats
 state: READY
 errors: []
 isDeactivated: false
-id: 688144b55c999fea55f50f91
-name: Get Chats
-type: list-data-records
 inputSchema:
   type: object
   properties:
     cursor:
       type: string
+type: list-data-records
 config:
   dataSource:
     key: chats
@@ -18,3 +17,4 @@ config:
     $var: $.input.cursor
   fieldMapping:
     key: chats
+isCustomized: true

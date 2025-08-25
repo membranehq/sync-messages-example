@@ -1,0 +1,54 @@
+id: 68ac7de2ed1cd64aebba4246
+name: 'Create: Messages'
+key: create-messages
+uuid: b22288e5-1996-485f-9081-4aa9a2722171
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 688773c67e68e15f9f5d9f44
+parentId: 6888d2459428ff0cd8a73926
+inputSchema:
+  type: object
+  properties:
+    customerId:
+      type: string
+    internalMessageId:
+      type: string
+    data:
+      type: object
+      properties:
+        content:
+          type: string
+        sender:
+          type: string
+        recipient:
+          type: string
+        chatId:
+          type: string
+        chatName:
+          type: string
+        chatType:
+          type: string
+        platformId:
+          type: string
+        platformName:
+          type: string
+        messageType:
+          type: string
+        status:
+          type: string
+        sentTime:
+          type: string
+        createdTime:
+          type: string
+        createdBy:
+          type: string
+        updatedTime:
+          type: string
+        updatedBy:
+          type: string
+type: run-javascript
+config:
+  code: "async function extractEmailFromFromHeader(fromHeader) {\n\t// Extract email address from \"From\" header value like \"Guilherme Dias <guilherme.dias@integration.app>\"\n\tconst emailMatch = fromHeader.match(/<(.+?)>/);\n\treturn emailMatch ? emailMatch[1] : fromHeader;\n}\n\nasync function getLastMessageFromThread(externalApiClient, chatId) {\n\ttry {\n\t\t// Fetch the thread details using the chatId\n\t\tconst threadResponse = await externalApiClient.get(\n\t\t\t`https://gmail.googleapis.com/gmail/v1/users/me/threads/${chatId}?format=full`\n\t\t);\n\n\t\tconst messages = threadResponse?.messages;\n\t\tif (!messages || messages.length === 0) {\n\t\t\tthrow new Error(\"No messages found in thread.\");\n\t\t}\n\n\t\t// Get the last message (most recent)\n\t\tconst lastMessage = messages[messages.length - 1];\n\t\tconst headers = lastMessage?.payload?.headers || [];\n\n\t\t// Extract required information from the last message\n\t\tconst fromHeader = headers.find((h) => h.name.toLowerCase() === \"from\");\n\t\tconst toHeader = headers.find((h) => h.name.toLowerCase() === \"to\");\n\t\tconst subjectHeader = headers.find(\n\t\t\t(h) => h.name.toLowerCase() === \"subject\"\n\t\t);\n\t\tconst messageIdHeader = headers.find(\n\t\t\t(h) => h.name.toLowerCase() === \"message-id\"\n\t\t);\n\n\t\tif (!fromHeader || !toHeader || !subjectHeader || !messageIdHeader) {\n\t\t\tthrow new Error(\"Required headers not found in last message.\");\n\t\t}\n\n\t\t// Extract email addresses\n\t\tconst fromEmail = await extractEmailFromFromHeader(fromHeader.value);\n\t\tconst toEmail = await extractEmailFromFromHeader(toHeader.value);\n\n\t\treturn {\n\t\t\tfromEmail: fromEmail,\n\t\t\ttoEmail: toEmail,\n\t\t\tsubject: subjectHeader.value,\n\t\t\tmessageId: messageIdHeader.value,\n\t\t\tthreadId: chatId,\n\t\t};\n\t} catch (error) {\n\t\tthrow error;\n\t}\n}\n\nasync function sendReplyEmail(externalApiClient, threadInfo, content) {\n\ttry {\n\t\t// Create email headers for reply\n\t\tconst replySubject = threadInfo.subject.startsWith(\"Re:\")\n\t\t\t? threadInfo.subject\n\t\t\t: `Re: ${threadInfo.subject}`;\n\n\t\t// Generate a unique Message-ID for our reply\n\t\tconst replyMessageId = `<reply-${Date.now()}-${Math.random()\n\t\t\t.toString(36)\n\t\t\t.substr(2, 9)}@integration.app>`;\n\n\t\t// Construct the email content\n\t\tconst emailContent = [\n\t\t\t`From: \"${threadInfo.toEmail}\" <${threadInfo.toEmail}>`,\n\t\t\t`To: ${threadInfo.fromEmail}`,\n\t\t\t`Subject: ${replySubject}`,\n\t\t\t`In-Reply-To: ${threadInfo.messageId}`,\n\t\t\t`References: ${threadInfo.messageId}`,\n\t\t\t`Message-ID: ${replyMessageId}`,\n\t\t\t`MIME-Version: 1.0`,\n\t\t\t`Content-Type: text/plain; charset=UTF-8`,\n\t\t\t``,\n\t\t\tcontent,\n\t\t].join(\"\\r\\n\");\n\n\t\t// Convert to base64url encoding\n\t\tconst base64Email = Buffer.from(emailContent)\n\t\t\t.toString(\"base64\")\n\t\t\t.replace(/\\+/g, \"-\")\n\t\t\t.replace(/\\//g, \"_\")\n\t\t\t.replace(/=+$/, \"\");\n\n\t\t// Send the reply\n\t\tconst sendResponse = await externalApiClient.post(\n\t\t\t`https://gmail.googleapis.com/gmail/v1/users/me/messages/send`,\n\t\t\t{\n\t\t\t\traw: base64Email,\n\t\t\t\tthreadId: threadInfo.threadId,\n\t\t\t}\n\t\t);\n\n\t\treturn {\n\t\t\tmessageId: sendResponse.id,\n\t\t\tthreadId: threadInfo.threadId,\n\t\t\tsubject: replySubject,\n\t\t\tto: threadInfo.fromEmail,\n\t\t\tfrom: threadInfo.toEmail,\n\t\t};\n\t} catch (error) {\n\t\tthrow error;\n\t}\n}\n\nmodule.exports = async function ({ input, externalApiClient }) {\n\ttry {\n\t\t// Extract chatId from input\n\t\tconst chatId = input?.data?.chatId;\n\t\tconst content = input?.data?.content;\n\n\t\tif (!chatId) {\n\t\t\tthrow new Error(\"chatId is required in input data\");\n\t\t}\n\n\t\tif (!content) {\n\t\t\tthrow new Error(\"content is required in input data\");\n\t\t}\n\n\t\t// Get the last message from the thread\n\t\tconst threadInfo = await getLastMessageFromThread(\n\t\t\texternalApiClient,\n\t\t\tchatId\n\t\t);\n\n\t\t// Send the reply email\n\t\tconst replyResult = await sendReplyEmail(\n\t\t\texternalApiClient,\n\t\t\tthreadInfo,\n\t\t\tcontent\n\t\t);\n\n\t\t// Return the result\n\t\treturn {\n\t\t\tsuccess: true,\n\t\t\tmessageId: replyResult.messageId,\n\t\t\tthreadId: replyResult.threadId,\n\t\t\tsubject: replyResult.subject,\n\t\t\tto: replyResult.to,\n\t\t\tfrom: replyResult.from,\n\t\t\tcontent: content,\n\t\t};\n\t} catch (error) {\n\t\tthrow error;\n\t}\n};\n"
+isCustomized: true
+integrationKey: gmail

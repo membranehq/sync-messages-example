@@ -1,0 +1,40 @@
+id: 68acc032b4ca6dc1f6581e82
+name: Get Messages
+key: get-messages
+uuid: 0295cb3d-6447-4a24-954a-2e08b666736a
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 688773c60a582d3a4b0a1d28
+parentId: 68814411f2eacefeb83c3b64
+inputSchema:
+  type: object
+  properties:
+    cursor:
+      type: string
+    channelId:
+      type: string
+type: list-data-records
+config:
+  cursor:
+    $var: $.input.cursor
+  dataSource:
+    collectionKey: messages
+  override:
+    apiRequests:
+      - match:
+          path: https://graph.microsoft.com/v1.0/me/messages
+          method: GET
+        patch:
+          query:
+            $top: '100'
+            $filter:
+              $tpl:
+                template: conversationId eq '{1756152825813}'
+                values:
+                  '1756152825813':
+                    $var: $.input.channelId
+  fieldMapping:
+    key: messages
+isCustomized: true
+integrationKey: microsoft-outlook

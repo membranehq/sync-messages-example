@@ -1,0 +1,13 @@
+id: 68ac757e13efd5db2a6fcebc
+name: Test get user
+key: test-get-user
+uuid: 4fbbedcd-509e-48ff-ab5f-462389327467
+state: READY
+errors: []
+isDeactivated: false
+integrationId: 688773c67e68e15f9f5d9f44
+type: run-javascript
+config:
+  code: "async function fetchGmailThreadInfo(externalApiClient) {\n\ttry {\n\t\t// Step 1: Fetch messages (in:sent messages)\n\t\tconst messagesResponse = await externalApiClient.get(\n\t\t\t`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=in:sent`\n\t\t);\n\n\t\tconst messages = messagesResponse?.messages;\n\t\tif (!messages || messages.length === 0) {\n\t\t\tthrow new Error(\"No messages found in 'in:sent' query.\");\n\t\t}\n\n\t\tconst firstThreadId = messages[0].threadId;\n\n\t\t// Step 2: Fetch full thread details\n\t\tconst threadResponse = await externalApiClient.get(\n\t\t\t`https://gmail.googleapis.com/gmail/v1/users/me/threads/${firstThreadId}?format=full`\n\t\t);\n\n\t\tconst headers = threadResponse?.messages?.[0]?.payload?.headers || [];\n\n\t\tconst fromHeader = headers.find((h) => h.name.toLowerCase() === \"from\");\n\n\t\tif (!fromHeader) {\n\t\t\tthrow new Error(\n\t\t\t\t`\"From\" header not found in thread ${firstThreadId}. Available headers: ${headers\n\t\t\t\t\t.map((h) => h.name)\n\t\t\t\t\t.join(\", \")}`\n\t\t\t);\n\t\t}\n\n\t\treturn {\n\t\t\tuserId: fromHeader.value,\n\t\t\tplatform: \"Gmail\",\n\t\t};\n\t} catch (error) {\n\t\tthrow error;\n\t}\n}\n\nmodule.exports = async function ({ input, externalApiClient }) {\n\ttry {\n\t\t// Fetch Gmail thread information\n\t\tconst threadInfo = await fetchGmailThreadInfo(externalApiClient);\n\n\t\t// Return the simplified result structure\n\t\treturn threadInfo;\n\t} catch (error) {\n\t\tthrow error;\n\t}\n};\n"
+isCustomized: true
+integrationKey: gmail

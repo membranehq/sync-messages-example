@@ -1,11 +1,9 @@
-isCustomized: true
+id: 6888d2459428ff0cd8a73926
+name: 'Create: Messages'
 key: create-messages
 state: READY
 errors: []
 isDeactivated: false
-id: 6888d2459428ff0cd8a73926
-name: 'Create: Messages'
-type: create-data-record
 inputSchema:
   type: object
   properties:
@@ -46,6 +44,7 @@ inputSchema:
           type: string
         updatedBy:
           type: string
+type: create-data-record
 config:
   dataSource:
     key: messages
@@ -53,3 +52,4 @@ config:
     key: messages
     input:
       $var: $.input.data
+isCustomized: true

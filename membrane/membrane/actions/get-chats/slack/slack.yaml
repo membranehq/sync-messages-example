@@ -1,18 +1,17 @@
-isCustomized: true
-parentId: 688144b55c999fea55f50f91
-integrationId: 6881440ff2eacefeb83c3adf
+id: 688144d99a588ae92068148d
+name: Get Chats
 key: get-chats
 state: READY
 errors: []
 isDeactivated: false
-id: 688144d99a588ae92068148d
-name: Get Chats
-type: list-data-records
+integrationId: 6881440ff2eacefeb83c3adf
+parentId: 688144b55c999fea55f50f91
 inputSchema:
   type: object
   properties:
     cursor:
       type: string
+type: list-data-records
 config:
   dataSource:
     key: chats
@@ -21,4 +20,5 @@ config:
   fieldMapping:
     key: chats
     includeRawFields: true
+isCustomized: true
 integrationKey: slack
