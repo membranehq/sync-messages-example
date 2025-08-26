@@ -11,10 +11,9 @@ Message fields will be mapped from your application's schema to the application-
 - **Import Messages**: Perform the initial import by calling the Integration.app REST API or SDK in a loop from your code to retrieve data page by page. Integration.app transforms the output into a consistent format compatible with your API, allowing you to save and match data efficiently.
 - **Export Messages**: Make another set of requests to create Messages in external app, if needed.
 - **User Platform Mapping**: Store mappings between your internal customer IDs and external platform user IDs/emails to correctly identify message senders and recipients.
+- **User ID Fetching**: Integration.app fetches user IDs during the initial sync process, ensuring proper user identification when sending messages and maintaining accurate sender/recipient mapping across all platforms.
 
 ### 2. Continuous Sync from External App
-
-s
 
 - **Webhook Subscription**: Enable subscription via a single API or SDK call to continuously receive created, updated, or deleted events from external applications.
 - **Integration.app Management**: Integration.app manages all integration-specific logic, including subscribing to/unsubscribing from webhooks, custom polling of events, or performing periodic full syncs.
@@ -36,55 +35,6 @@ s
 - **Cross-Platform Conversations**: You can seamlessly switch between email threads and chat conversations, with all messages appearing in a unified timeline.
 
 This design enables true unified messaging where email and chat communications are treated as equal participants in your messaging ecosystem.
-
-## Key Features Implemented
-
-### Message Direction Detection
-
-- **User vs Third-party Messages**: Messages from the current user are displayed on the right (darker color), while messages from other users appear on the left (brighter color).
-- **Platform-specific Sender Identification**: Uses UserPlatform records to map external user IDs/emails to internal customer IDs for accurate message direction detection.
-- **Gmail Support**: Handles Gmail's "From" header format (e.g., "Guilherme Dias <email@domain.com>") and maps it to stored external user emails.
-
-### Chat Management
-
-- **Real Chat Names**: Fetches actual chat names from the `chats/available` endpoint instead of using generic "Chat {id}" names.
-- **Chat Deletion**: Complete chat deletion workflow with hover delete buttons, confirmation dialogs, and backend API to remove chats and associated messages.
-- **Import Workflow**: "Import Chats" button in chat list when no chats are imported, with proper loading states.
-
-### Webhook Processing
-
-- **Duplicate Prevention**: Validates `externalMessageId` + `customerId` to prevent duplicate messages for the same customer.
-- **Integration ID Resolution**: Extracts integration information from UserPlatform records using customerId + platformName combination.
-- **Chat Integration Fix**: Updates existing chats' integrationId from "unknown" or mismatched values to the correct integrationId.
-
-### User Experience
-
-- **Onboarding Flow**: Front-and-center "Connect Your First Integration" message when no connections exist.
-- **Loading States**: Timeout-based loading states to prevent flash of "no connections" message and loading indicators for import/sync actions.
-- **Enhanced UI**: Blue styling for sidebar and primary buttons, improved icon hierarchy, and consistent header visibility.
-- **Search Functionality**: Optimized chat search with reduced padding and improved styling.
-
-### Data Integrity
-
-- **Type Safety**: Full TypeScript implementation with proper interfaces and type definitions.
-- **Error Handling**: Comprehensive error handling for API calls, webhook processing, and user interactions.
-- **MongoDB Integration**: Proper indexing and data relationships between messages, chats, and user platforms.
-
-## Supported Integrations
-
-- **Slack**: Full message sync with proper user identification
-- **Gmail**: Email thread sync with sender/recipient mapping
-- **Microsoft Teams**: Team chat synchronization
-- **WhatsApp**: Message sync for business accounts
-- **Facebook Messenger**: Social media message integration
-- **Instagram Messenger**: Instagram direct message sync
-
-### Data Models
-
-- **Message**: Core message entity with platform-specific fields
-- **Chat**: Conversation container with participants and metadata
-- **UserPlatform**: Mapping between internal and external user identifiers
-- **SyncStatus**: Tracking synchronization state and progress
 
 ## Getting Started
 
