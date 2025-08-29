@@ -107,7 +107,7 @@ npm install -g @membranehq/cli
 membrane init
 ```
 
-4. Run the `push` method to clone the required structure to your workspace
+3. Run the `push` method to clone the required structure to your workspace
 
 ```bash
 membrane push -w <your-workspace-key-here>
