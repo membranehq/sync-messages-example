@@ -160,7 +160,7 @@ export function ChatscopeChat({
 								<div key={index} className="relative">
 									{/* Show sender name for incoming messages (only when needed) */}
 									{shouldShowName && (
-										<div className="text-xs text-gray-500 dark:text-gray-400 ml-4 mb-1">
+										<div className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-4 mb-0 mt-5">
 											{msg.sender}
 										</div>
 									)}
