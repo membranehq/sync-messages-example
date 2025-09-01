@@ -79,19 +79,6 @@ The application properly handles various platform data structures:
 - **Message content**: Extracts from `fields.text`, `rawFields.text`, or other platform-specific fields
 - **Sender information**: Extracts from `fields.ownerId`, `rawFields.user`, or other sender fields
 
-## Technologies Used
-
-- **Next.js 15**: React framework with App Router
-- **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first CSS framework
-- **SWR**: Data fetching and caching
-- **Integration.app SDK**: Platform integration
-- **MongoDB**: Data storage (via Mongoose)
-- **date-fns**: Date formatting utilities
-- **Lucide React**: Icon library
-- **@chatscope/chat-ui-kit-react**: Professional chat UI components and interface
-- **@chatscope/chat-ui-kit-styles**: Chat UI styling and themes
-
 ## Getting Started
 
 1. install membrane on `/membrane`
@@ -166,9 +153,18 @@ You can customize the chat interface by:
 - Customizing timestamp handling in `src/lib/utils.ts`
 - Adding new platform integrations by extending the sync logic
 
-## todos
+## Technologies Used
 
-[] Add filtering to import methods
+- **Next.js 15**: React framework with App Router
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **SWR**: Data fetching and caching
+- **Integration.app SDK**: Platform integration
+- **MongoDB**: Data storage (via Mongoose)
+- **date-fns**: Date formatting utilities
+- **Lucide React**: Icon library
+- **@chatscope/chat-ui-kit-react**: Professional chat UI components and interface
+- **@chatscope/chat-ui-kit-styles**: Chat UI styling and themes
 
 ## License
 
