@@ -10,7 +10,7 @@ export function Banner() {
 				<Blocks className="w-4 h-4 mr-2 align-text-bottom" aria-hidden="true" />
 				Start building universal integrations with{" "}
 				<a
-					href="https://integration.app"
+					href="https://integration.app/scenarios/two-way-realtime-sync-of-messages/"
 					target="_blank"
 					rel="noopener noreferrer"
 					className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-blue-100 transition-colors font-bold ml-1"
