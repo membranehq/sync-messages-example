@@ -86,7 +86,11 @@ export function Sidebar() {
 			{/* Logo */}
 			<div className="p-2 border-b border-gray-200 dark:border-gray-700">
 				<div className="w-12 h-12 flex items-center justify-center">
-					<img src="/logo.svg" alt="App Logo" className="w-8 h-8 dark:invert" />
+					<img 
+						src={theme === "dark" ? "/logo-dark.png" : "/logo.png"} 
+						alt="Membrane Logo" 
+						className="w-8 h-8" 
+					/>
 				</div>
 			</div>
 
